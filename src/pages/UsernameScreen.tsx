@@ -64,8 +64,11 @@ const UsernameScreen = () => {
 
     const { error } = await supabase
       .from("profiles")
-      .update(updateData)
-      .eq("user_id", user.id);
+      .upsert({
+        user_id: user.id,
+        ...updateData,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
 
     if (error) {
       toast.error("Could not save profile");
@@ -134,10 +137,10 @@ const UsernameScreen = () => {
               onChange={(e) => handleChange(e.target.value)}
               placeholder="your_username"
               className={`w-full rounded-xl border bg-gray-50 pl-8 pr-9 py-3 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-gray-400 focus:bg-white ${available === true
-                  ? "border-green-300 focus:border-green-400 focus:ring-2 focus:ring-green-100"
-                  : available === false
-                    ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                    : "border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                ? "border-green-300 focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                : available === false
+                  ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                  : "border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 }`}
             />
             {available === true && (
