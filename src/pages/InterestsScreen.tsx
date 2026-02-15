@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Interest {
     id: string;
@@ -35,7 +38,9 @@ const LAYOUT_ROWS = [1, 2, 2, 3, 3, 2, 2, 1, 1];
 
 const InterestsScreen = () => {
     const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const toggleInterest = (id: string) => {
         setSelected((prev) => {
@@ -49,8 +54,24 @@ const InterestsScreen = () => {
         });
     };
 
-    const handleContinue = () => {
-        navigate("/conditions");
+    const handleContinue = async () => {
+        if (!user) return;
+        setSaving(true);
+
+        const { error } = await supabase
+            .from("profiles")
+            .upsert({
+                user_id: user.id,
+                interests: Array.from(selected),
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+
+        setSaving(false);
+        if (error) {
+            toast.error("Failed to save interests");
+        } else {
+            navigate("/conditions");
+        }
     };
 
     // Build rows from the layout
@@ -118,13 +139,13 @@ const InterestsScreen = () => {
             <div className="w-full max-w-sm pb-6 pt-2">
                 <button
                     onClick={handleContinue}
-                    disabled={selected.size === 0}
+                    disabled={selected.size === 0 || saving}
                     className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
                 >
-                    Continue
+                    {saving ? "Saving..." : "Continue"}
                 </button>
                 <button
-                    onClick={handleContinue}
+                    onClick={() => navigate("/conditions")}
                     className="w-full mt-3 text-sm font-semibold text-secondary hover:underline transition-colors text-center"
                 >
                     Skip for now
@@ -135,3 +156,4 @@ const InterestsScreen = () => {
 };
 
 export default InterestsScreen;
+bitumen

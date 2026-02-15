@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Briefcase, ChevronDown } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type OccupationType = "student" | "professional" | null;
 
@@ -20,10 +23,30 @@ const OccupationScreen = () => {
     const [school, setSchool] = useState("");
     const [level, setLevel] = useState("");
     const [showLevels, setShowLevels] = useState(false);
+    const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
-    const handleContinue = () => {
-        navigate("/location");
+    const handleContinue = async () => {
+        if (!user || !occupation) return;
+        setSaving(true);
+
+        const { error } = await supabase
+            .from("profiles")
+            .upsert({
+                user_id: user.id,
+                occupation,
+                school_company: school,
+                level_role: level,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+
+        setSaving(false);
+        if (error) {
+            toast.error("Failed to save occupation info");
+        } else {
+            navigate("/location");
+        }
     };
 
     return (
@@ -63,7 +86,7 @@ const OccupationScreen = () => {
           `}
                 >
                     <div className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${occupation === "student" ? "bg-primary/10" : "bg-gray-100"}`}>
-                        <GraduationCap size={28} className={occupation === "student" ? "text-primary" : "text-gray-500"} />
+                        < GraduationCap size={28} className={occupation === "student" ? "text-primary" : "text-gray-500"} />
                     </div>
                     <span className={`text-base font-bold ${occupation === "student" ? "text-primary" : "text-foreground"}`}>
                         Student
@@ -155,13 +178,13 @@ const OccupationScreen = () => {
             <div className="w-full max-w-sm pb-6 pt-2">
                 <button
                     onClick={handleContinue}
-                    disabled={!occupation}
+                    disabled={!occupation || saving}
                     className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
                 >
-                    Continue
+                    {saving ? "Saving..." : "Continue"}
                 </button>
                 <button
-                    onClick={handleContinue}
+                    onClick={() => navigate("/location")}
                     className="w-full mt-3 text-sm font-semibold text-secondary hover:underline transition-colors text-center"
                 >
                     Skip for now

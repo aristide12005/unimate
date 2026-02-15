@@ -1,6 +1,9 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Home, BedDouble, Users, MapPin, Plus, Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface LocationItem {
     city: string;
@@ -33,7 +36,9 @@ const LocationScreen = () => {
     const [selectedLocation, setSelectedLocation] = useState<LocationItem | null>(null);
     const [housing, setHousing] = useState<HousingRole>(null);
     const [showResults, setShowResults] = useState(false);
+    const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const filtered = useMemo(() => {
         if (!query.trim()) return [];
@@ -59,8 +64,27 @@ const LocationScreen = () => {
         }
     };
 
-    const handleContinue = () => {
-        navigate("/interests");
+    const handleContinue = async () => {
+        if (!user || !housing) return;
+        setSaving(true);
+
+        const { error } = await supabase
+            .from("profiles")
+            .upsert({
+                user_id: user.id,
+                location_city: selectedLocation?.city || query,
+                location_country: selectedLocation?.country || "",
+                campus: selectedLocation?.campus || "",
+                housing_status: housing,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+
+        setSaving(false);
+        if (error) {
+            toast.error("Failed to save location info");
+        } else {
+            navigate("/interests");
+        }
     };
 
     return (
@@ -254,13 +278,13 @@ const LocationScreen = () => {
             <div className="w-full max-w-sm pt-4">
                 <button
                     onClick={handleContinue}
-                    disabled={!housing}
+                    disabled={!housing || saving}
                     className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
                 >
-                    Continue
+                    {saving ? "Saving..." : "Continue"}
                 </button>
                 <button
-                    onClick={handleContinue}
+                    onClick={() => navigate("/interests")}
                     className="w-full mt-3 text-sm font-semibold text-secondary hover:underline transition-colors text-center"
                 >
                     Skip for now

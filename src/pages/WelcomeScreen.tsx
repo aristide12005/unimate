@@ -15,8 +15,13 @@ const WelcomeScreen = () => {
     if (!user) return;
     const { error } = await supabase
       .from("profiles")
-      .update({ first_name: firstName, last_name: lastName })
-      .eq("user_id", user.id);
+      .upsert({
+        user_id: user.id,
+        first_name: firstName,
+        last_name: lastName,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
     if (error) {
       toast.error("Could not save name");
     } else {
