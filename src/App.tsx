@@ -35,6 +35,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<SplashScreen />} />
+            <Route path="/splash" element={<SplashScreen />} />
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/auth-callback" element={<OAuthCallback />} />
             <Route path="/check-email" element={<CheckEmailScreen />} />
