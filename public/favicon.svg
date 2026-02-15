@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F9A825"/>
+      <stop offset="100%" stop-color="#F57C00"/>
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#26A69A"/>
+      <stop offset="100%" stop-color="#00796B"/>
+    </linearGradient>
+    <clipPath id="leftHalf">
+      <rect x="0" y="0" width="128" height="256"/>
+    </clipPath>
+    <clipPath id="rightHalf">
+      <rect x="128" y="0" width="128" height="256"/>
+    </clipPath>
+  </defs>
+
+  <!-- Orange left half -->
+  <circle cx="128" cy="128" r="120" fill="url(#orangeGrad)" clip-path="url(#leftHalf)"/>
+  <!-- Teal right half -->
+  <circle cx="128" cy="128" r="120" fill="url(#tealGrad)" clip-path="url(#rightHalf)"/>
+
+  <!-- Glossy highlight -->
+  <ellipse cx="128" cy="80" rx="90" ry="60" fill="white" opacity="0.15"/>
+
+  <!-- U letter -->
+  <text x="68" y="170" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="120" fill="white" text-anchor="middle">U</text>
+  <!-- M letter -->
+  <text x="188" y="170" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="120" fill="white" text-anchor="middle">M</text>
+</svg>
