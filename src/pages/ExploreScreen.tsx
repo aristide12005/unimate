@@ -22,7 +22,7 @@ const ExploreScreen = () => {
     <div className="min-h-screen bg-background flex flex-col pb-24">
       {/* Header */}
       <div className="px-5 pt-4">
-        <h1 className="text-2xl font-black text-foreground">Explore</h1>
+        <h1 className="text-2xl font-black text-foreground">News</h1>
         <p className="text-sm text-muted-foreground font-medium mt-0.5">Discover communities & people</p>
       </div>
 

@@ -32,7 +32,21 @@ const LoginScreen = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        navigate("/welcome"); // Go to onboarding after login
+        // Check if profile is complete
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('onboarding_complete')
+            .eq('user_id', user.id)
+            .single();
+
+          if (profile?.onboarding_complete) {
+            navigate("/home");
+          } else {
+            navigate("/welcome");
+          }
+        }
       }
     }
   };

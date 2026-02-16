@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Briefcase, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,19 +27,37 @@ const OccupationScreen = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    useEffect(() => {
+        if (!user) return;
+        const fetchProfile = async () => {
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("occupation, school_company, level_role")
+                .eq("user_id", user.id)
+                .single();
+
+            if (data && !error) {
+                if (data.occupation) setOccupation(data.occupation as OccupationType);
+                if (data.school_company) setSchool(data.school_company);
+                if (data.level_role) setLevel(data.level_role);
+            }
+        };
+        fetchProfile();
+    }, [user]);
+
     const handleContinue = async () => {
         if (!user || !occupation) return;
         setSaving(true);
 
         const { error } = await supabase
             .from("profiles")
-            .upsert({
-                user_id: user.id,
+            .update({
                 occupation,
                 school_company: school,
                 level_role: level,
                 updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+            })
+            .eq("user_id", user.id);
 
         setSaving(false);
         if (error) {
@@ -174,18 +192,23 @@ const OccupationScreen = () => {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Bottom */}
-            <div className="w-full max-w-sm pb-6 pt-2">
+            {/* Navigation Buttons */}
+            <div className="w-full max-w-sm flex flex-col gap-3 pb-8">
                 <button
                     onClick={handleContinue}
                     disabled={!occupation || saving}
-                    className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
+                    className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all
+                        ${occupation
+                            ? "gradient-primary-btn text-primary-foreground shadow-primary/25"
+                            : "bg-muted text-muted-foreground cursor-not-allowed"
+                        }`}
                 >
                     {saving ? "Saving..." : "Continue"}
                 </button>
+
                 <button
                     onClick={() => navigate("/location")}
-                    className="w-full mt-3 text-sm font-semibold text-secondary hover:underline transition-colors text-center"
+                    className="text-gray-400 font-medium text-sm hover:text-gray-600 transition-colors"
                 >
                     Skip for now
                 </button>

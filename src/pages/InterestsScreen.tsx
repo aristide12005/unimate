@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +42,22 @@ const InterestsScreen = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    useEffect(() => {
+        if (!user) return;
+        const fetchProfile = async () => {
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("interests")
+                .eq("user_id", user.id)
+                .single();
+
+            if (data?.interests && !error) {
+                setSelected(new Set(data.interests));
+            }
+        };
+        fetchProfile();
+    }, [user]);
+
     const toggleInterest = (id: string) => {
         setSelected((prev) => {
             const next = new Set(prev);
@@ -55,22 +71,23 @@ const InterestsScreen = () => {
     };
 
     const handleContinue = async () => {
-        if (!user) return;
+        if (selected.size < 3 || !user) return;
         setSaving(true);
 
         const { error } = await supabase
             .from("profiles")
-            .upsert({
-                user_id: user.id,
+            .update({
                 interests: Array.from(selected),
                 updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+            })
+            .eq("user_id", user.id);
 
         setSaving(false);
+
         if (error) {
             toast.error("Failed to save interests");
         } else {
-            navigate("/conditions");
+            navigate("/username");
         }
     };
 
@@ -135,18 +152,23 @@ const InterestsScreen = () => {
                 ))}
             </div>
 
-            {/* Bottom Actions */}
-            <div className="w-full max-w-sm pb-6 pt-2">
+            {/* Continue Button */}
+            <div className="w-full max-w-sm mt-8 flex flex-col gap-3">
                 <button
                     onClick={handleContinue}
-                    disabled={selected.size === 0 || saving}
-                    className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
+                    disabled={selected.size < 3 || saving}
+                    className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all
+                            ${selected.size >= 3
+                            ? "gradient-primary-btn text-primary-foreground shadow-primary/25"
+                            : "bg-muted text-muted-foreground cursor-not-allowed"
+                        }`}
                 >
                     {saving ? "Saving..." : "Continue"}
                 </button>
+
                 <button
-                    onClick={() => navigate("/conditions")}
-                    className="w-full mt-3 text-sm font-semibold text-secondary hover:underline transition-colors text-center"
+                    onClick={() => navigate("/username")}
+                    className="text-gray-400 font-medium text-sm hover:text-gray-600 transition-colors pb-2"
                 >
                     Skip for now
                 </button>

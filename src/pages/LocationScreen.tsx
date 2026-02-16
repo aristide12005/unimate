@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Home, BedDouble, Users, MapPin, Plus, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +40,28 @@ const LocationScreen = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    useEffect(() => {
+        if (!user) return;
+        const fetchProfile = async () => {
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("location_city, location_country, campus, housing_status")
+                .eq("user_id", user.id)
+                .single();
+
+            if (data && !error) {
+                if (data.location_city) {
+                    // Try to match with existing LOCATIONS or create a custom one
+                    const matched = LOCATIONS.find(l => l.city === data.location_city && l.country === data.location_country && l.campus === data.campus);
+                    setSelectedLocation(matched || { city: data.location_city, country: data.location_country || "", campus: data.campus || undefined });
+                    setQuery(data.location_city);
+                }
+                if (data.housing_status) setHousing(data.housing_status as HousingRole);
+            }
+        };
+        fetchProfile();
+    }, [user]);
+
     const filtered = useMemo(() => {
         if (!query.trim()) return [];
         const q = query.toLowerCase();
@@ -65,23 +87,24 @@ const LocationScreen = () => {
     };
 
     const handleContinue = async () => {
-        if (!user || !housing) return;
+        if (!selectedLocation || !housing || !user) return;
         setSaving(true);
 
         const { error } = await supabase
             .from("profiles")
-            .upsert({
-                user_id: user.id,
-                location_city: selectedLocation?.city || query,
-                location_country: selectedLocation?.country || "",
-                campus: selectedLocation?.campus || "",
+            .update({
+                location_city: selectedLocation.city,
+                location_country: selectedLocation.country,
+                campus: selectedLocation.campus || null,
                 housing_status: housing,
                 updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+            })
+            .eq("user_id", user.id);
 
         setSaving(false);
+
         if (error) {
-            toast.error("Failed to save location info");
+            toast.error("Failed to save location");
         } else {
             navigate("/interests");
         }
@@ -274,18 +297,23 @@ const LocationScreen = () => {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Bottom */}
-            <div className="w-full max-w-sm pt-4">
+            {/* Continue Button */}
+            <div className="w-full max-w-sm mt-auto flex flex-col gap-3">
                 <button
                     onClick={handleContinue}
-                    disabled={!housing || saving}
-                    className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
+                    disabled={!selectedLocation || !housing || saving}
+                    className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all
+                            ${selectedLocation && housing
+                            ? "gradient-primary-btn text-primary-foreground shadow-primary/25"
+                            : "bg-muted text-muted-foreground cursor-not-allowed"
+                        }`}
                 >
                     {saving ? "Saving..." : "Continue"}
                 </button>
+
                 <button
                     onClick={() => navigate("/interests")}
-                    className="w-full mt-3 text-sm font-semibold text-secondary hover:underline transition-colors text-center"
+                    className="text-gray-400 font-medium text-sm hover:text-gray-600 transition-colors pb-2"
                 >
                     Skip for now
                 </button>

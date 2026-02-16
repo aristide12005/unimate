@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Image } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,8 +11,24 @@ const PhotoScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data?.avatar_url) {
+        setPhoto(data.avatar_url); // Assuming 'photo' is the state for the displayed avatar
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file || !user) return;
     setPhoto(URL.createObjectURL(file));
     setUploading(true);
@@ -29,6 +45,17 @@ const PhotoScreen = () => {
     const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
     await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user.id);
     setUploading(false);
+  };
+
+  const handleContinue = async () => {
+    if (user) {
+      // Mark onboarding as complete
+      await supabase
+        .from("profiles")
+        .update({ onboarding_complete: true })
+        .eq("user_id", user.id);
+    }
+    navigate("/home");
   };
 
   return (
@@ -54,9 +81,9 @@ const PhotoScreen = () => {
       </label>
 
       <div className="mt-auto mb-6 w-full max-w-sm pb-4">
-        <button onClick={() => navigate("/success")}
+        <button onClick={handleContinue}
           className="w-full py-4 rounded-2xl gradient-primary-btn text-primary-foreground font-bold text-lg shadow-lg active:scale-[0.98] transition-transform">
-          Continue
+          Finish Setup
         </button>
       </div>
     </div>

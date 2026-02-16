@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, X, AtSign, Cake, Camera } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,29 @@ const UsernameScreen = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username, birthday, avatar_url")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data && !error) {
+        if (data.username) setUsername(data.username);
+        if (data.birthday) {
+          const [y, m, d] = data.birthday.split("-");
+          if (y) setYear(y);
+          if (m) setMonth(m);
+          if (d) setDay(d);
+        }
+        if (data.avatar_url) setAvatarPreview(data.avatar_url);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const checkAvailability = async (name: string) => {
     if (name.length < 2) { setAvailable(null); return; }
@@ -45,35 +68,37 @@ const UsernameScreen = () => {
     if (!user || !available) return;
     const birthday = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
-    // Upload avatar if selected
-    let avatar_url: string | undefined;
-    if (avatarFile) {
-      const ext = avatarFile.name.split(".").pop();
-      const path = `${user.id}/avatar.${ext}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("avatars")
-        .upload(path, avatarFile, { upsert: true });
-      if (!uploadErr) {
-        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-        avatar_url = urlData.publicUrl;
+    try {
+      let currentAvatarUrl = null;
+      if (avatarFile) {
+        const filePath = `${user.id}/avatar-${Date.now()}.${avatarFile.name.split('.').pop()}`;
+        const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, avatarFile, { upsert: true });
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
+          currentAvatarUrl = publicUrl;
+        }
       }
-    }
 
-    const updateData: Record<string, string> = { username, birthday };
-    if (avatar_url) updateData.avatar_url = avatar_url;
-
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        user_id: user.id,
-        ...updateData,
+      const updateData: any = {
+        username,
+        birthday,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      };
 
-    if (error) {
-      toast.error("Could not save profile");
-    } else {
-      navigate("/success");
+      if (currentAvatarUrl) {
+        updateData.avatar_url = currentAvatarUrl;
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updateData)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      navigate("/photo");
+
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save profile");
     }
   };
 

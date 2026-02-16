@@ -95,6 +95,17 @@ const ProfileScreen = () => {
 
       {/* Menu */}
       <div className="mx-5 mt-5 space-y-2">
+        <button
+          onClick={() => navigate("/post-room")}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-primary shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform mb-4"
+        >
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <StartIcon className="text-white" size={18} />
+          </div>
+          <span className="text-sm font-bold text-white flex-1 text-left">Post a Room</span>
+          <ArrowRightIcon className="text-white/70" size={18} />
+        </button>
+
         <button className="w-full flex items-center gap-3 p-4 rounded-2xl bg-card shadow-sm active:scale-[0.98] transition-transform">
           <Edit3 size={18} className="text-secondary" />
           <span className="text-sm font-bold text-foreground">Edit Profile</span>
@@ -113,5 +124,13 @@ const ProfileScreen = () => {
     </div>
   );
 };
+
+const StartIcon = ({ className, size }: { className?: string, size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+);
+
+const ArrowRightIcon = ({ className, size }: { className?: string, size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6" /></svg>
+);
 
 export default ProfileScreen;
