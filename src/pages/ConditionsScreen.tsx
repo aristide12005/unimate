@@ -60,15 +60,31 @@ const ConditionsScreen = () => {
         if (!user) return;
         setSaving(true);
 
-        // Combine all data into a JSON structure or separate columns if we had them.
-        // For now, let's keep it simple and focus on the flow.
-        // If we want to save these specifically, we'd need more columns.
-        // I'll save them to a generic 'metadata' or 'preferences' if available, 
-        // but looking at our migration, we only added specific ones.
-        // Let's just finish the flow for now as per the user's primary goal.
+        // Collect selected habits as interests tags
+        const selectedHabits = Object.entries(habits)
+            .filter(([_, isActive]) => isActive)
+            .map(([id, _]) => id); // "smoker", "night_owl", etc.
 
-        navigate("/contact");
-        setSaving(false);
+        // We can also save dealbreakers if we had a column, but for now let's just save habits to interests
+        // potentially prefixed or just as is. The prompt asked for "specific tags... into interests array".
+
+        try {
+            const { error } = await supabase
+                .from("profiles")
+                .update({
+                    interests: selectedHabits,
+                    updated_at: new Date().toISOString()
+                })
+                .eq("user_id", user.id);
+
+            if (error) throw error;
+            navigate("/contact");
+        } catch (error) {
+            console.error("Error saving conditions:", error);
+            toast.error("Failed to save preferences");
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (

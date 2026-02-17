@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Check, Home, DollarSign, MapPin, FileText } from "lucide-react";
+import { ArrowLeft, Upload, Check, Home, DollarSign, MapPin, FileText, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ const PostListingScreen = () => {
     const [price, setPrice] = useState("");
     const [location, setLocation] = useState("");
     const [description, setDescription] = useState("");
+    const [features, setFeatures] = useState<string[]>([]);
     // Using a set of default images for now as agreed
     const [image, setImage] = useState("https://images.unsplash.com/photo-1522708323590-d24dbb6b0267");
 
@@ -41,6 +42,7 @@ const PostListingScreen = () => {
                     price,
                     location,
                     description,
+                    features, // Save amenities
                     image,
                     author_id: profile.id, // Use Profile ID, not Auth ID
                     created_at: new Date().toISOString()
@@ -152,6 +154,32 @@ const PostListingScreen = () => {
                         placeholder="Describe the room, amenities, and what you are looking for..."
                         className="w-full px-4 py-3.5 rounded-2xl bg-white border border-gray-200 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-medium text-gray-900 placeholder:text-gray-400 resize-none"
                     />
+                </div>
+
+                {/* Amenities */}
+                <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-1">
+                        <Sparkles size={14} /> Amenities
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                        {['WiFi', 'AC', 'Private Bathroom', 'Furnished', 'Non-Smoker', 'No Pets', 'Security', 'Terrace'].map(feat => (
+                            <button
+                                key={feat}
+                                type="button"
+                                onClick={() => {
+                                    setFeatures(prev =>
+                                        prev.includes(feat) ? prev.filter(f => f !== feat) : [...prev, feat]
+                                    );
+                                }}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${features.includes(feat)
+                                    ? "bg-primary text-white border-primary"
+                                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                                    }`}
+                            >
+                                {feat}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Image Selection */}
