@@ -26,7 +26,6 @@ import UserListingsScreen from "./pages/UserListingsScreen";
 import ChatScreen from "./pages/ChatScreen";
 import ExploreScreen from "./pages/ExploreScreen";
 import NotificationScreen from "./pages/NotificationScreen";
-import SearchScreen from "./pages/SearchScreen";
 import MessagesScreen from "./pages/MessagesScreen";
 import ActivityScreen from "./pages/ActivityScreen";
 import ProfileScreen from "./pages/ProfileScreen";
@@ -71,7 +70,6 @@ const App = () => (
                 <Route path="/chat/:id" element={<ProtectedRoute><ChatScreen /></ProtectedRoute>} />
                 <Route path="/explore" element={<ProtectedRoute><ExploreScreen /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationScreen /></ProtectedRoute>} />
-                <Route path="/search" element={<ProtectedRoute><SearchScreen /></ProtectedRoute>} />
                 <Route path="/messages" element={<ProtectedRoute><MessagesScreen /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityScreen /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />

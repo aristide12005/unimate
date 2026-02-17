@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, X, Bookmark, Share, Send, MapPin, MessageCircle } from "lucide-react";
+import { ArrowLeft, X, Bookmark, Share, Send, MapPin, MessageCircle, Copy } from "lucide-react";
 import { useListings } from "@/hooks/useListings";
+import { toast } from "sonner";
+import { ShareDialog } from "@/components/ShareDialog";
 
 const ListingDetailsScreen = () => {
     const { id } = useParams();
@@ -21,6 +23,11 @@ const ListingDetailsScreen = () => {
     if (!listing) {
         return <div className="p-8 text-center">Listing not found</div>;
     }
+
+    const shareUrl = window.location.href;
+    const shareTitle = `Check out this place: ${listing.title}`;
+    const shareDesc = `${listing.title} in ${listing.location} - ${listing.price}/month`;
+
     return (
         <div className="min-h-screen bg-white pb-24 font-sans relative">
             {/* ─── Header (Absolute/Overlay) ─── */}
@@ -41,9 +48,11 @@ const ListingDetailsScreen = () => {
                 </div>
                 <h1 className="text-lg font-bold text-foreground">Listing Details</h1>
                 <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-full">
-                        <Share size={24} className="text-primary" />
-                    </button>
+                    <ShareDialog title={shareTitle} description={shareDesc} url={shareUrl}>
+                        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors active:scale-95">
+                            <Share size={24} className="text-primary" />
+                        </button>
+                    </ShareDialog>
                     <button className="p-2 hover:bg-gray-100 rounded-full">
                         <Send size={24} className="text-primary" />
                     </button>
