@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, Search, MapPin } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { EmblaCarouselType } from "embla-carousel";
@@ -81,8 +82,54 @@ const HomeScreen = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gray-50 pb-24 font-sans">
+        {/* Header Skeleton */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md px-6 pt-14 pb-2 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div>
+              <Skeleton className="w-12 h-3 mb-1" />
+              <Skeleton className="w-24 h-5" />
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <Skeleton className="w-6 h-6 rounded-full" />
+            <Skeleton className="w-6 h-6 rounded-full" />
+          </div>
+        </div>
+
+        {/* Hero Text Skeleton */}
+        <div className="px-6 pt-32 mb-5 text-center flex flex-col items-center">
+          <Skeleton className="w-3/4 h-8 mb-2" />
+          <Skeleton className="w-1/2 h-4" />
+        </div>
+
+        {/* Carousel Skeleton */}
+        <div className="flex px-4 items-center justify-center h-[280px]">
+          <Skeleton className="w-full max-w-[320px] h-[260px] rounded-[2.5rem]" />
+        </div>
+
+        {/* Dots Skeleton */}
+        <div className="flex justify-center gap-2 mt-6">
+          <Skeleton className="w-2 h-2 rounded-full" />
+          <Skeleton className="w-2 h-2 rounded-full" />
+          <Skeleton className="w-2 h-2 rounded-full" />
+        </div>
+
+        {/* Moms Near You Skeleton */}
+        <div className="mt-8 px-6">
+          <div className="flex justify-between mb-4">
+            <Skeleton className="w-32 h-6" />
+            <Skeleton className="w-9 h-9 rounded-full" />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Skeleton className="aspect-square rounded-2xl" />
+            <Skeleton className="aspect-square rounded-2xl" />
+            <Skeleton className="aspect-square rounded-2xl" />
+          </div>
+        </div>
+
+        <BottomNav />
       </div>
     );
   }

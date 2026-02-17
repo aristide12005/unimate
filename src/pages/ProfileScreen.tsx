@@ -1,4 +1,5 @@
 import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -23,15 +24,20 @@ const ProfileScreen = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
+    setLoading(true);
     supabase
       .from("profiles")
       .select("first_name, last_name, username, avatar_url, birthday")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => setProfile(data));
+      .then(({ data }) => {
+        setProfile(data);
+        setLoading(false);
+      });
   }, [user]);
 
   const handleSignOut = async () => {
@@ -46,6 +52,46 @@ const ProfileScreen = () => {
   const initials = profile?.first_name
     ? `${profile.first_name[0]}${profile.last_name?.[0] || ""}`.toUpperCase()
     : displayName[0]?.toUpperCase() || "U";
+
+  // ─── SKELETON LOADER ───
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col pb-24">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between px-5 pt-4">
+          <Skeleton className="w-24 h-8" />
+          <Skeleton className="w-9 h-9 rounded-full" />
+        </div>
+
+        {/* Profile Card Skeleton */}
+        <div className="mx-5 mt-5 bg-card rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-20 h-20 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="w-32 h-6" />
+              <Skeleton className="w-20 h-4" />
+              <Skeleton className="w-40 h-3" />
+            </div>
+          </div>
+          {/* Stats Skeleton */}
+          <div className="flex justify-around mt-5 pt-4 border-t border-border">
+            <div className="flex flex-col items-center gap-1"><Skeleton className="w-5 h-5" /><Skeleton className="w-8 h-6" /><Skeleton className="w-12 h-3" /></div>
+            <div className="flex flex-col items-center gap-1"><Skeleton className="w-5 h-5" /><Skeleton className="w-8 h-6" /><Skeleton className="w-12 h-3" /></div>
+            <div className="flex flex-col items-center gap-1"><Skeleton className="w-5 h-5" /><Skeleton className="w-8 h-6" /><Skeleton className="w-12 h-3" /></div>
+          </div>
+        </div>
+
+        {/* Menu Skeleton */}
+        <div className="mx-5 mt-5 space-y-4">
+          <Skeleton className="w-full h-16 rounded-2xl" />
+          <Skeleton className="w-full h-14 rounded-2xl" />
+          <Skeleton className="w-full h-14 rounded-2xl" />
+        </div>
+
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-24">

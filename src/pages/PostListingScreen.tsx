@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 const PostListingScreen = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -24,20 +24,14 @@ const PostListingScreen = () => {
         e.preventDefault();
         if (!user) return;
 
+        if (!profile) {
+            toast.error("Profile not found. Please try refreshing the page.");
+            return;
+        }
+
         setLoading(true);
 
         try {
-            // 1. Get the Profile ID (Public UUID) for the current user
-            const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('user_id', user.id)
-                .single();
-
-            if (profileError || !profileData) {
-                throw new Error("Could not find your profile. Please try logging in again.");
-            }
-
             // 2. Insert Listing with Profile ID
             const { error } = await supabase
                 .from('listings')
@@ -48,7 +42,7 @@ const PostListingScreen = () => {
                     location,
                     description,
                     image,
-                    author_id: profileData.id, // Use Profile ID, not Auth ID
+                    author_id: profile.id, // Use Profile ID, not Auth ID
                     created_at: new Date().toISOString()
                 });
 

@@ -4,47 +4,46 @@ import { MOCK_CONVERSATIONS } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useConversations = () => {
-    const { user } = useAuth();
-    const [conversations, setConversations] = useState<any[]>(MOCK_CONVERSATIONS);
+    const { user, profile } = useAuth();
+    const [conversations, setConversations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || !profile) return;
 
         const fetchConversations = async () => {
-            // Fetch distinct discussions
-            // This is complex without a conversations table. 
-            // For now, we'll fetch messages where user is involved.
-            // But since we didn't create a 'conversations' view, let's keep it simple.
-            // We will actually just return mock for now if DB logic is too complex for this step 
-            // without modifying backend more.
-
-            // Wait, we seeded messages.
-            // Let's try to fetch them.
-
             const { data, error } = await supabase
-                .from('messages')
-                .select(`
-            *,
-            sender:sender_id(first_name, last_name, avatar_url),
-            receiver:receiver_id(first_name, last_name, avatar_url)
-        `)
-                .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+                .from('conversation_list' as any)
+                .select('*')
+                .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
                 .order('created_at', { ascending: false });
 
-            if (data) {
-                // Process messages into conversations...
-                // This is non-trivial without a proper conversation ID.
-                // I'll stick to MOCK_CONVERSATIONS for now unless requested strictly.
-                // User said "all info is also in database".
-                // The messages ARE in DB. But fetching them as a list requires logic.
-                // I will return mock for list, but real fetching for chat detail if implemented.
+            if (data && !error) {
+                // Map to UI model
+                const formatted = data.map((c: any) => {
+                    const isSender = c.sender_id === profile.id;
+                    return {
+                        id: isSender ? c.receiver_id : c.sender_id, // Return the ID of the OTHER person
+                        name: isSender
+                            ? `${c.receiver_first_name || ''} ${c.receiver_last_name || ''}`.trim()
+                            : `${c.sender_first_name || ''} ${c.sender_last_name || ''}`.trim(),
+                        avatar: isSender ? c.receiver_avatar_url : c.sender_avatar_url,
+                        lastMessage: c.content,
+                        time: new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        unread: !c.is_read && !isSender ? 1 : 0
+                    };
+                });
+                setConversations(formatted);
+            } else {
+                console.error("Error fetching conversations:", error);
+                // Fallback to mock if view not present yet
+                setConversations(MOCK_CONVERSATIONS);
             }
             setLoading(false);
         };
 
         fetchConversations();
-    }, [user]);
+    }, [user, profile]);
 
     return { conversations, loading };
 };

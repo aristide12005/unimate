@@ -1,9 +1,11 @@
 import { Home, Users, Newspaper, MessageCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useUnread } from "@/contexts/UnreadContext";
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { unreadCount } = useUnread();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -35,9 +37,16 @@ const BottomNav = () => {
 
       <button
         onClick={() => navigate("/messages")}
-        className={`flex flex-col items-center gap-1 transition-colors ${isActive("/messages") ? "text-primary" : "text-gray-400"}`}
+        className={`relative flex flex-col items-center gap-1 transition-colors ${isActive("/messages") ? "text-primary" : "text-gray-400"}`}
       >
-        <MessageCircle size={24} strokeWidth={isActive("/messages") ? 2.5 : 2} />
+        <div className="relative">
+          <MessageCircle size={24} strokeWidth={isActive("/messages") ? 2.5 : 2} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
         <span className="text-[10px] font-bold">Chat</span>
       </button>
     </div>

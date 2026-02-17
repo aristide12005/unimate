@@ -43,7 +43,11 @@ const PhotoScreen = () => {
     }
 
     const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user.id);
+    await supabase.from("profiles").upsert({
+      user_id: user.id,
+      avatar_url: publicUrl,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
     setUploading(false);
   };
 
@@ -52,8 +56,11 @@ const PhotoScreen = () => {
       // Mark onboarding as complete
       await supabase
         .from("profiles")
-        .update({ onboarding_complete: true })
-        .eq("user_id", user.id);
+        .upsert({
+          user_id: user.id,
+          onboarding_complete: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
     }
     navigate("/home");
   };
