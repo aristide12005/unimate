@@ -1,4 +1,4 @@
-import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen } from "lucide-react";
+import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefcase, GraduationCap, Phone, MessageCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,8 +10,17 @@ interface Profile {
   first_name: string | null;
   last_name: string | null;
   username: string | null;
+  bio: string | null;
   avatar_url: string | null;
-  birthday: string | null;
+  occupation: string | null;
+  school_company: string | null;
+  level_role: string | null;
+  location_city: string | null;
+  location_country: string | null;
+  campus: string | null;
+  interests: string[] | null;
+  phone_number: string | null;
+  contact_type: string | null;
 }
 
 const stats = [
@@ -31,11 +40,11 @@ const ProfileScreen = () => {
     setLoading(true);
     supabase
       .from("profiles")
-      .select("first_name, last_name, username, avatar_url, birthday")
+      .select("*")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
-        setProfile(data);
+        setProfile(data as unknown as Profile);
         setLoading(false);
       });
   }, [user]);
@@ -104,40 +113,99 @@ const ProfileScreen = () => {
       </div>
 
       {/* Profile Card */}
-      <div className="mx-5 mt-5 bg-card rounded-3xl p-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full border-3 border-primary bg-secondary/20 flex items-center justify-center overflow-hidden glow-ring">
+      <div className="mx-5 mt-5 bg-card rounded-3xl p-6 shadow-sm border border-border/50">
+        <div className="flex flex-col items-center text-center">
+          <div className="relative mb-3">
+            <div className="w-24 h-24 rounded-full border-4 border-background bg-secondary/10 flex items-center justify-center overflow-hidden shadow-sm">
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-black text-secondary">{initials}</span>
+                <span className="text-3xl font-black text-secondary">{initials}</span>
               )}
             </div>
-            <button className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md">
-              <Camera size={14} className="text-primary-foreground" />
+            <button
+              onClick={() => navigate("/edit-profile")}
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+            >
+              <Edit3 size={14} className="text-primary-foreground" />
             </button>
           </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-black text-foreground">{displayName}</h2>
-            {profile?.username && (
-              <p className="text-sm text-secondary font-bold">@{profile.username}</p>
+
+          <h2 className="text-xl font-black text-foreground">{displayName}</h2>
+          {profile?.username && (
+            <p className="text-sm text-primary font-bold">@{profile.username}</p>
+          )}
+
+          {/* Bio */}
+          {profile?.bio && (
+            <p className="text-sm text-muted-foreground mt-2 max-w-[250px] leading-relaxed">
+              {profile.bio}
+            </p>
+          )}
+
+          {/* Tags: Occupation & Location */}
+          <div className="flex flex-wrap justify-center gap-2 mt-4">
+            {profile?.occupation && (
+              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100 flex items-center gap-1">
+                <Briefcase size={10} />
+                {profile.occupation === 'student' ? 'Student' : 'Pro'}
+              </span>
             )}
-            <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
+            {profile?.location_city && (
+              <span className="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-bold border border-orange-100 flex items-center gap-1">
+                <MapPin size={10} />
+                {profile.location_city}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Stats */}
-        <div className="flex justify-around mt-5 pt-4 border-t border-border">
+        <div className="flex justify-around mt-6 pt-6 border-t border-border/50">
           {stats.map((stat) => (
             <div key={stat.label} className="flex flex-col items-center">
-              <stat.icon size={18} className="text-primary mb-1" />
+              <stat.icon size={18} className="text-muted-foreground mb-1" />
               <span className="text-lg font-black text-foreground">{stat.value}</span>
               <span className="text-[10px] text-muted-foreground font-semibold">{stat.label}</span>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Detailed Info Cards */}
+      {(profile?.school_company || profile?.interests?.length) && (
+        <div className="mx-5 mt-4 space-y-3">
+          {profile.school_company && (
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <GraduationCap size={20} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-bold uppercase">Education / Work</p>
+                <p className="text-sm font-bold text-foreground">{profile.school_company}</p>
+                {profile.level_role && (
+                  <p className="text-xs text-muted-foreground">{profile.level_role}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {profile.interests && profile.interests.length > 0 && (
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50">
+              <p className="text-xs text-muted-foreground font-bold uppercase mb-3 flex items-center gap-2">
+                <Star size={12} /> Interests
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {profile.interests.map(i => (
+                  <span key={i} className="px-3 py-1.5 rounded-full bg-gray-100 text-foreground text-xs font-bold border border-gray-200 capitalize">
+                    {i}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Menu */}
       <div className="mx-5 mt-5 space-y-2">
@@ -152,7 +220,10 @@ const ProfileScreen = () => {
           <ArrowRightIcon className="text-white/70" size={18} />
         </button>
 
-        <button className="w-full flex items-center gap-3 p-4 rounded-2xl bg-card shadow-sm active:scale-[0.98] transition-transform">
+        <button
+          onClick={() => navigate("/edit-profile")}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-card shadow-sm active:scale-[0.98] transition-transform"
+        >
           <Edit3 size={18} className="text-secondary" />
           <span className="text-sm font-bold text-foreground">Edit Profile</span>
         </button>

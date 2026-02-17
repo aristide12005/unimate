@@ -14,6 +14,7 @@ import OccupationScreen from "./pages/OccupationScreen";
 import LocationScreen from "./pages/LocationScreen";
 import InterestsScreen from "./pages/InterestsScreen";
 import ConditionsScreen from "./pages/ConditionsScreen";
+import ContactScreen from "./pages/ContactScreen";
 import UsernameScreen from "./pages/UsernameScreen";
 import PhotoScreen from "./pages/PhotoScreen";
 import SuccessScreen from "./pages/SuccessScreen";
@@ -29,6 +30,7 @@ import SearchScreen from "./pages/SearchScreen";
 import MessagesScreen from "./pages/MessagesScreen";
 import ActivityScreen from "./pages/ActivityScreen";
 import ProfileScreen from "./pages/ProfileScreen";
+import EditProfileScreen from "./pages/EditProfileScreen";
 import PostListingScreen from "./pages/PostListingScreen";
 import OAuthCallback from "./pages/OAuthCallback";
 import NotFound from "./pages/NotFound";
@@ -57,6 +59,7 @@ const App = () => (
                 <Route path="/location" element={<ProtectedRoute><LocationScreen /></ProtectedRoute>} />
                 <Route path="/interests" element={<ProtectedRoute><InterestsScreen /></ProtectedRoute>} />
                 <Route path="/conditions" element={<ProtectedRoute><ConditionsScreen /></ProtectedRoute>} />
+                <Route path="/contact" element={<ProtectedRoute><ContactScreen /></ProtectedRoute>} />
                 <Route path="/username" element={<ProtectedRoute><UsernameScreen /></ProtectedRoute>} />
                 <Route path="/photo" element={<ProtectedRoute><PhotoScreen /></ProtectedRoute>} />
                 <Route path="/success" element={<ProtectedRoute><SuccessScreen /></ProtectedRoute>} />
@@ -72,6 +75,7 @@ const App = () => (
                 <Route path="/messages" element={<ProtectedRoute><MessagesScreen /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityScreen /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
+                <Route path="/edit-profile" element={<ProtectedRoute><EditProfileScreen /></ProtectedRoute>} />
                 <Route path="/post-room" element={<ProtectedRoute><PostListingScreen /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

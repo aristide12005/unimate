@@ -5,9 +5,10 @@ import { useListings } from "@/hooks/useListings";
 const ListingDetailsScreen = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { listings, loading } = useListings();
+    const { listings, loading, savedListingIds, toggleSave } = useListings();
 
     const listing = listings.find((l) => l.id === Number(id));
+    const isSaved = listing ? savedListingIds.has(listing.id) : false;
 
     if (loading) {
         return (
@@ -28,8 +29,14 @@ const ListingDetailsScreen = () => {
                     <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
                         <X size={24} className="text-primary" />
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full">
-                        <Bookmark size={24} className="text-primary" />
+                    <button
+                        onClick={() => toggleSave(listing.id)}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                        <Bookmark
+                            size={24}
+                            className={`transition-colors ${isSaved ? "text-orange-500 fill-orange-500" : "text-primary"}`}
+                        />
                     </button>
                 </div>
                 <h1 className="text-lg font-bold text-foreground">Listing Details</h1>

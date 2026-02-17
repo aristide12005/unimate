@@ -67,7 +67,7 @@ const ConditionsScreen = () => {
         // but looking at our migration, we only added specific ones.
         // Let's just finish the flow for now as per the user's primary goal.
 
-        navigate("/username");
+        navigate("/contact");
         setSaving(false);
     };
 

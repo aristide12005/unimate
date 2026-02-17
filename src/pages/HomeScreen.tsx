@@ -72,7 +72,7 @@ const HomeScreen = () => {
   useEffect(() => {
     const getProfile = async () => {
       if (!user) return;
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).single();
       setProfile(data);
     };
     getProfile();
@@ -149,7 +149,7 @@ const HomeScreen = () => {
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Welcome</p>
             <h2 className="text-lg font-bold text-foreground leading-none">
-              Hi uniMate
+              Hi {profile?.first_name || "uniMate"}
             </h2>
           </div>
         </div>
