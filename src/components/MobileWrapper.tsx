@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Smartphone, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import IOSInstallPrompt from "./IOSInstallPrompt";
 
 interface MobileWrapperProps {
@@ -9,9 +10,15 @@ interface MobileWrapperProps {
 
 const MobileWrapper = ({ children }: MobileWrapperProps) => {
     const [showQR, setShowQR] = useState(false);
+    const location = useLocation();
 
     // Use the specific network IP provided by the user for the QR code
     const currentUrl = "http://192.168.1.18:4173/";
+
+    // If on admin routes, render children directly (Desktop View)
+    if (location.pathname.startsWith("/admin")) {
+        return <>{children}</>;
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 flex justify-center">

@@ -4,6 +4,8 @@ import { GraduationCap, Briefcase, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AsyncSelect } from "@/components/ui/async-select";
+import { searchUniversities, University } from "@/services/universityService";
 
 type OccupationType = "student" | "professional" | null;
 
@@ -139,12 +141,40 @@ const OccupationScreen = () => {
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
                             {occupation === "student" ? "School / University" : "Company / Organization"}
                         </label>
-                        <input
-                            placeholder={occupation === "student" ? "e.g. Groupe ISM, UCAD..." : "e.g. Google, Startup..."}
-                            value={school}
-                            onChange={(e) => setSchool(e.target.value)}
-                            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
+
+                        {occupation === "student" ? (
+                            <AsyncSelect
+                                value={school}
+                                onChange={setSchool}
+                                onSelect={(item: University) => {
+                                    setSchool(item.name);
+                                    // Could also auto-fill domain if we wanted
+                                }}
+                                fetcher={(q) => searchUniversities(q)}
+                                getLabel={(item: University) => item.name}
+                                renderOption={(item: University) => (
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <GraduationCap size={14} className="text-primary" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold text-sm text-gray-900 truncate">{item.name}</p>
+                                            <p className="text-xs text-gray-500 truncate">{item.country}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                placeholder="Search university (e.g. UCAD, ISM...)"
+                                icon={GraduationCap}
+                            />
+                        ) : (
+                            <input
+                                placeholder="e.g. Google, Startup..."
+                                value={school}
+                                onChange={(e) => setSchool(e.target.value)}
+                                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            />
+                        )}
+
                     </div>
 
                     {/* Level (for students) / Role (for professionals) */}

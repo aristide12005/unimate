@@ -5,6 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AsyncSelect } from "@/components/ui/async-select";
+import { searchUniversities, University } from "@/services/universityService";
+import { searchLocations, Location as NominatimLocation } from "@/services/locationService";
 
 interface ProfileData {
     first_name: string;
@@ -322,12 +325,36 @@ const EditProfileScreen = () => {
                             <label className="text-xs font-semibold text-gray-500 mb-1 block">
                                 {formData.occupation === "student" ? "School / University" : "Company / Organization"}
                             </label>
-                            <input
-                                value={formData.school_company}
-                                onChange={e => setFormData({ ...formData, school_company: e.target.value })}
-                                className="w-full p-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all text-sm font-bold"
-                                placeholder={formData.occupation === "student" ? "MIT, Harvard..." : "Google, Apple..."}
-                            />
+                            {formData.occupation === "student" ? (
+                                <AsyncSelect
+                                    value={formData.school_company}
+                                    onChange={(val) => setFormData({ ...formData, school_company: val })}
+                                    onSelect={(item: University) => setFormData({ ...formData, school_company: item.name })}
+                                    fetcher={searchUniversities}
+                                    getLabel={(item: University) => item.name}
+                                    renderOption={(item: University) => (
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                <GraduationCap size={14} className="text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-semibold text-sm text-gray-900 truncate">{item.name}</p>
+                                                <p className="text-xs text-gray-500 truncate">{item.country}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    placeholder="Search university..."
+                                    icon={GraduationCap}
+                                    className="w-full"
+                                />
+                            ) : (
+                                <input
+                                    value={formData.school_company}
+                                    onChange={e => setFormData({ ...formData, school_company: e.target.value })}
+                                    className="w-full p-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all text-sm font-bold"
+                                    placeholder="Google, Apple..."
+                                />
+                            )}
                         </div>
 
                         <div>
@@ -351,11 +378,36 @@ const EditProfileScreen = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-xs font-semibold text-gray-500 mb-1 block">City</label>
-                                <input
+                                <AsyncSelect
                                     value={formData.location_city}
-                                    onChange={e => setFormData({ ...formData, location_city: e.target.value })}
-                                    className="w-full p-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all text-sm font-bold"
-                                    placeholder="New York"
+                                    onChange={(val) => setFormData({ ...formData, location_city: val })}
+                                    onSelect={(item: NominatimLocation) => {
+                                        const parts = item.display_name.split(',').map(p => p.trim());
+                                        const city = parts[0];
+                                        const country = parts[parts.length - 1]; // Heuristic
+                                        setFormData({
+                                            ...formData,
+                                            location_city: city,
+                                            location_country: country
+                                        });
+                                    }}
+                                    fetcher={searchLocations}
+                                    getLabel={(item: NominatimLocation) => item.display_name.split(',')[0]}
+                                    renderOption={(item: NominatimLocation) => (
+                                        <div className="flex items-start gap-3">
+                                            <MapPin size={16} className="text-secondary mt-0.5 flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">
+                                                    {item.display_name.split(',')[0]}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                                    {item.display_name}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    placeholder="Search city..."
+                                    icon={MapPin}
                                 />
                             </div>
                             <div>

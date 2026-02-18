@@ -121,6 +121,7 @@ export type Database = {
           location_country: string | null
           occupation: string | null
           onboarding_complete: boolean | null
+          role: Database["public"]["Enums"]["app_role"]
           school_company: string | null
           updated_at: string
           user_id: string | null
@@ -145,6 +146,7 @@ export type Database = {
           location_country?: string | null
           occupation?: string | null
           onboarding_complete?: boolean | null
+          role?: Database["public"]["Enums"]["app_role"]
           school_company?: string | null
           updated_at?: string
           user_id?: string | null
@@ -169,6 +171,7 @@ export type Database = {
           location_country?: string | null
           occupation?: string | null
           onboarding_complete?: boolean | null
+          role?: Database["public"]["Enums"]["app_role"]
           school_company?: string | null
           updated_at?: string
           user_id?: string | null
@@ -184,7 +187,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never

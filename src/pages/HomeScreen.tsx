@@ -8,6 +8,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { EmblaCarouselType } from "embla-carousel";
 import BottomNav from "@/components/BottomNav";
 import InstallPWA from "@/components/InstallPWA";
+import { SmartSearchInput } from "@/components/SmartSearchInput";
 
 import { useListings } from "@/hooks/useListings";
 
@@ -163,7 +164,7 @@ const HomeScreen = () => {
             <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
           </button>
           <button
-            onClick={() => navigate("/search")}
+            onClick={() => navigate("/listings", { state: { autoFocus: true } })}
             className="text-foreground hover:text-primary transition-colors"
           >
             <Search size={22} />
@@ -281,7 +282,7 @@ const HomeScreen = () => {
       </div>
 
       <BottomNav />
-    </div>
+    </div >
   );
 };
 

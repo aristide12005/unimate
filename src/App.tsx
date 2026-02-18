@@ -24,7 +24,7 @@ import ListingDetailsScreen from "./pages/ListingDetailsScreen";
 import UserProfileScreen from "./pages/UserProfileScreen";
 import UserListingsScreen from "./pages/UserListingsScreen";
 import ChatScreen from "./pages/ChatScreen";
-import ExploreScreen from "./pages/ExploreScreen";
+import ConnectScreen from "./pages/ConnectScreen";
 import NotificationScreen from "./pages/NotificationScreen";
 import MessagesScreen from "./pages/MessagesScreen";
 import ActivityScreen from "./pages/ActivityScreen";
@@ -33,6 +33,16 @@ import EditProfileScreen from "./pages/EditProfileScreen";
 import PostListingScreen from "./pages/PostListingScreen";
 import OAuthCallback from "./pages/OAuthCallback";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ReportsDashboard from "./pages/admin/ReportsDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import TeamManagement from "./pages/admin/TeamManagement";
+import ListingManagement from "./pages/admin/ListingManagement";
+import AdminMessages from "./pages/admin/AdminMessages";
+import DiagnosticPage from "./pages/DiagnosticPage";
+import AdminLoginScreen from "./pages/admin/AdminLoginScreen";
+import AdminSignupScreen from "./pages/admin/AdminSignupScreen";
 
 const queryClient = new QueryClient();
 
@@ -45,40 +55,56 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <MobileWrapper>
-            <BrowserRouter>
+          <BrowserRouter>
+            <MobileWrapper>
               <Routes>
                 <Route path="/" element={<SplashScreen />} />
                 <Route path="/splash" element={<SplashScreen />} />
                 <Route path="/login" element={<LoginScreen />} />
                 <Route path="/auth-callback" element={<OAuthCallback />} />
                 <Route path="/check-email" element={<CheckEmailScreen />} />
-                <Route path="/welcome" element={<ProtectedRoute><WelcomeScreen /></ProtectedRoute>} />
-                <Route path="/occupation" element={<ProtectedRoute><OccupationScreen /></ProtectedRoute>} />
-                <Route path="/location" element={<ProtectedRoute><LocationScreen /></ProtectedRoute>} />
-                <Route path="/interests" element={<ProtectedRoute><InterestsScreen /></ProtectedRoute>} />
-                <Route path="/conditions" element={<ProtectedRoute><ConditionsScreen /></ProtectedRoute>} />
-                <Route path="/contact" element={<ProtectedRoute><ContactScreen /></ProtectedRoute>} />
-                <Route path="/username" element={<ProtectedRoute><UsernameScreen /></ProtectedRoute>} />
-                <Route path="/photo" element={<ProtectedRoute><PhotoScreen /></ProtectedRoute>} />
-                <Route path="/success" element={<ProtectedRoute><SuccessScreen /></ProtectedRoute>} />
-                <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
-                <Route path="/listings" element={<ProtectedRoute><ListingsScreen /></ProtectedRoute>} />
-                <Route path="/listings/:id" element={<ProtectedRoute><ListingDetailsScreen /></ProtectedRoute>} />
-                <Route path="/user/:id" element={<ProtectedRoute><UserProfileScreen /></ProtectedRoute>} />
-                <Route path="/user/:id/places" element={<ProtectedRoute><UserListingsScreen /></ProtectedRoute>} />
-                <Route path="/chat/:id" element={<ProtectedRoute><ChatScreen /></ProtectedRoute>} />
-                <Route path="/explore" element={<ProtectedRoute><ExploreScreen /></ProtectedRoute>} />
-                <Route path="/notifications" element={<ProtectedRoute><NotificationScreen /></ProtectedRoute>} />
-                <Route path="/messages" element={<ProtectedRoute><MessagesScreen /></ProtectedRoute>} />
-                <Route path="/activity" element={<ProtectedRoute><ActivityScreen /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
-                <Route path="/edit-profile" element={<ProtectedRoute><EditProfileScreen /></ProtectedRoute>} />
-                <Route path="/post-room" element={<ProtectedRoute><PostListingScreen /></ProtectedRoute>} />
+                <Route path="/welcome" element={<ProtectedRoute redirectIfComplete><WelcomeScreen /></ProtectedRoute>} />
+                <Route path="/occupation" element={<ProtectedRoute redirectIfComplete><OccupationScreen /></ProtectedRoute>} />
+                <Route path="/location" element={<ProtectedRoute redirectIfComplete><LocationScreen /></ProtectedRoute>} />
+                <Route path="/interests" element={<ProtectedRoute redirectIfComplete><InterestsScreen /></ProtectedRoute>} />
+                <Route path="/conditions" element={<ProtectedRoute redirectIfComplete><ConditionsScreen /></ProtectedRoute>} />
+                <Route path="/contact" element={<ProtectedRoute redirectIfComplete><ContactScreen /></ProtectedRoute>} />
+                <Route path="/username" element={<ProtectedRoute redirectIfComplete><UsernameScreen /></ProtectedRoute>} />
+                <Route path="/photo" element={<ProtectedRoute redirectIfComplete><PhotoScreen /></ProtectedRoute>} />
+                <Route path="/success" element={<ProtectedRoute redirectIfComplete><SuccessScreen /></ProtectedRoute>} />
+                <Route path="/home" element={<ProtectedRoute requireProfile><HomeScreen /></ProtectedRoute>} />
+                <Route path="/listings" element={<ProtectedRoute requireProfile><ListingsScreen /></ProtectedRoute>} />
+                <Route path="/listings/:id" element={<ProtectedRoute requireProfile><ListingDetailsScreen /></ProtectedRoute>} />
+                <Route path="/user/:id" element={<ProtectedRoute requireProfile><UserProfileScreen /></ProtectedRoute>} />
+                <Route path="/user/:id/places" element={<ProtectedRoute requireProfile><UserListingsScreen /></ProtectedRoute>} />
+                <Route path="/chat/:id" element={<ProtectedRoute requireProfile><ChatScreen /></ProtectedRoute>} />
+                <Route path="/connect" element={<ProtectedRoute requireProfile><ConnectScreen /></ProtectedRoute>} />
+                <Route path="/notifications" element={<ProtectedRoute requireProfile><NotificationScreen /></ProtectedRoute>} />
+                <Route path="/messages" element={<ProtectedRoute requireProfile><MessagesScreen /></ProtectedRoute>} />
+                <Route path="/activity" element={<ProtectedRoute requireProfile><ActivityScreen /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute requireProfile><ProfileScreen /></ProtectedRoute>} />
+                <Route path="/edit-profile" element={<ProtectedRoute requireProfile><EditProfileScreen /></ProtectedRoute>} />
+                <Route path="/post-room" element={<ProtectedRoute requireProfile><PostListingScreen /></ProtectedRoute>} />
+                <Route path="/admin-debug" element={<ProtectedRoute requireProfile><DiagnosticPage /></ProtectedRoute>} />
+
+                {/* Admin Auth */}
+                <Route path="/admin/login" element={<AdminLoginScreen />} />
+                <Route path="/admin/signup" element={<AdminSignupScreen />} />
+
+                {/* Admin Routes */}
+                <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<UserManagement />} />
+                  <Route path="team" element={<TeamManagement />} />
+                  <Route path="reports" element={<ReportsDashboard />} />
+                  <Route path="messages" element={<AdminMessages />} />
+                  <Route path="listings" element={<ListingManagement />} />
+                </Route>
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </MobileWrapper>
+            </MobileWrapper>
+          </BrowserRouter>
         </TooltipProvider>
       </UnreadProvider>
     </AuthProvider>

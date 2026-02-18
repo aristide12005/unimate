@@ -1,45 +1,38 @@
-import { ArrowLeft, Search, X, MapPin, ChevronRight, Home, DollarSign, Zap, GraduationCap, Map, Bookmark } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Search, X, MapPin, ChevronRight, Home, DollarSign, Zap, GraduationCap, Map, Bookmark, Wifi, Wind, ShieldCheck, Armchair, Ban, Cat, TreePalm, Loader2 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useListings } from "@/hooks/useListings";
 import BottomNav from "@/components/BottomNav";
+import { Skeleton } from "@/components/ui/skeleton";
+import { searchUniversities, University } from "@/services/universityService";
+import { searchLocations, Location as NominatimLocation } from "@/services/locationService";
+import { useDebounce } from "@/hooks/use-debounce";
+
+import { SmartSearchInput } from "@/components/SmartSearchInput";
 
 const ListingsScreen = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const inputRef = useRef<HTMLInputElement>(null);
-    const { listings, loading, savedListingIds, toggleSave, searchListings } = useListings();
+    const { listings, loading, savedListingIds, toggleSave, filters, setFilters } = useListings();
 
     // UI State
     const [showSavedOnly, setShowSavedOnly] = useState(false);
     const [activeCategory, setActiveCategory] = useState<'location' | 'budget' | 'type' | 'conditions' | 'school'>('location');
 
-    // Filter State
-    const [filters, setFilters] = useState({
-        location: "",
-        minPrice: 0,
-        maxPrice: 300000,
-        type: "",
-        features: [] as string[],
-        school: ""
-    });
 
-    // Debounce Search
+
+    // Check for initial Navigation State
     useEffect(() => {
-        const timer = setTimeout(() => {
-            searchListings({
-                query: filters.location,
-                location: filters.location,
-                minPrice: filters.minPrice,
-                maxPrice: filters.maxPrice,
-                type: filters.type === "All" ? "" : filters.type,
-                features: filters.features,
-                school: filters.school
-            });
-        }, 500);
+        if (location.state?.filters) {
+            setFilters(prev => ({ ...prev, ...location.state.filters }));
+            // If location filter is present, ensure we are in location mode
+            if (location.state.filters.location) setActiveCategory('location');
+            if (location.state.filters.school) setActiveCategory('school');
+        }
+    }, [location.state]);
 
-        return () => clearTimeout(timer);
-    }, [filters]);
-
+    // Categories Configuration
     const categories = [
         { id: 'location', label: 'Location', icon: MapPin },
         { id: 'school', label: 'School', icon: GraduationCap },
@@ -57,39 +50,23 @@ const ListingsScreen = () => {
         }));
     };
 
-    // Dynamic Input Handling
-    const getInputValue = () => {
-        switch (activeCategory) {
-            case 'school': return filters.school;
-            case 'location': return filters.location;
-            default: return "";
-        }
-    };
-
-    const handleInputChange = (val: string) => {
-        switch (activeCategory) {
-            case 'school':
-                setFilters({ ...filters, school: val });
-                break;
-            case 'location':
-                setFilters({ ...filters, location: val });
-                break;
-            default:
-                if (val.length > 0) {
-                    setActiveCategory('location');
-                    setFilters({ ...filters, location: val });
-                }
-                break;
-        }
+    // Handlers for SmartSearchInput
+    const handleSmartSearch = (newFilters: Partial<typeof filters>) => {
+        setFilters(prev => ({ ...prev, ...newFilters }));
+        // Switch category based on what was updated
+        if (newFilters.school) setActiveCategory('school');
+        if (newFilters.location) setActiveCategory('location');
+        if (newFilters.maxPrice) setActiveCategory('budget');
+        if (newFilters.features) setActiveCategory('conditions');
     };
 
     const getPlaceholder = () => {
         switch (activeCategory) {
-            case 'school': return "Which school? (e.g. ISM)";
+            case 'school': return "Search university (e.g. Cheikh Anta Diop)";
             case 'budget': return "Adjust price slider below...";
             case 'type': return "Select property type...";
             case 'conditions': return "Select amenities...";
-            default: return "Where to? (Location, keywords...)";
+            default: return "Search location (e.g. Mermoz, Fann)";
         }
     };
 
@@ -97,6 +74,33 @@ const ListingsScreen = () => {
     const displayedListings = showSavedOnly
         ? listings.filter(l => savedListingIds.has(l.id))
         : listings;
+
+    // Helper to map feature text to icon
+    const getFeatureIcon = (feature: string) => {
+        const lower = feature.toLowerCase();
+        if (lower.includes('wifi')) return <Wifi size={12} />;
+        if (lower.includes('ac') || lower.includes('air')) return <Wind size={12} />;
+        if (lower.includes('security')) return <ShieldCheck size={12} />;
+        if (lower.includes('furnished')) return <Armchair size={12} />;
+        if (lower.includes('smoker')) return <Ban size={12} />;
+        if (lower.includes('pet')) return <Cat size={12} />;
+        if (lower.includes('terrace') || lower.includes('garden')) return <TreePalm size={12} />;
+        return <Zap size={12} />;
+    };
+
+    const clearFilters = () => {
+        setFilters({
+            query: "",
+            location: "",
+            minPrice: 0,
+            maxPrice: 300000,
+            type: "",
+            features: [],
+            school: ""
+        });
+        setActiveCategory('location');
+        setActiveCategory('location');
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20 font-sans flex flex-col">
@@ -109,37 +113,22 @@ const ListingsScreen = () => {
                             <ArrowLeft size={24} className="text-gray-700" />
                         </button>
 
-                        {/* Omnibar */}
-                        <div className="flex-1 bg-gray-100 rounded-xl flex items-center px-4 py-2.5 gap-3 transition-all ring-1 ring-transparent focus-within:ring-primary/20 focus-within:bg-white">
-                            <Search size={20} className="text-gray-400" />
-                            <input
-                                ref={inputRef}
-                                className="bg-transparent border-none outline-none w-full text-sm font-semibold text-gray-900 placeholder:text-gray-400"
-                                placeholder={getPlaceholder()}
-                                value={getInputValue()}
-                                onChange={(e) => handleInputChange(e.target.value)}
-                                onFocus={() => {
-                                    if (activeCategory !== 'location' && activeCategory !== 'school') {
-                                        setActiveCategory('location');
-                                    }
-                                }}
-                                disabled={activeCategory === 'budget' || activeCategory === 'conditions' || activeCategory === 'type'}
+                        {/* Connected Smart Input */}
+                        <div className="flex-1 z-50">
+                            <SmartSearchInput
+                                onSearch={handleSmartSearch}
+                                initialValue={filters.school || filters.location}
+                                placeholder={
+                                    activeCategory === 'school' ? "Search university..." :
+                                        activeCategory === 'budget' ? "Type max price..." :
+                                            "Search location, budget, etc..."
+                                }
+                                autoFocus={location.state?.autoFocus}
                             />
-                            {(activeCategory === 'location' && filters.location) || (activeCategory === 'school' && filters.school) ? (
-                                <button onClick={() => handleInputChange("")}>
-                                    <X size={16} className="text-gray-400" />
-                                </button>
-                            ) : null}
                         </div>
 
                         {/* Right Actions */}
                         <div className="flex items-center gap-1">
-                            {/* Map Toggle (Future) */}
-                            {/* <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                <Map size={24} className="text-gray-700" />
-                            </button> */}
-
-                            {/* Favorites Toggle */}
                             <button
                                 onClick={() => setShowSavedOnly(!showSavedOnly)}
                                 className={`p-2 rounded-full transition-all ${showSavedOnly ? "bg-orange-100" : "hover:bg-gray-100"}`}
@@ -156,8 +145,8 @@ const ListingsScreen = () => {
                                 key={cat.id}
                                 onClick={() => setActiveCategory(cat.id as any)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeCategory === cat.id
-                                        ? "bg-primary text-white shadow-md shadow-primary/20"
-                                        : "bg-white text-gray-600 border border-gray-100"
+                                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                                    : "bg-white text-gray-600 border border-gray-100"
                                     }`}
                             >
                                 <cat.icon size={16} />
@@ -169,13 +158,13 @@ const ListingsScreen = () => {
 
                 {/* ─── INLINE FILTER PANELS (Sticky) ─── */}
 
-                {/* School Suggestions */}
-                {activeCategory === 'school' && (
+                {/* School Suggestions (Static Fallback/Quick Links) */}
+                {activeCategory === 'school' && !filters.school && (
                     <div className="px-4 pb-4 animate-in slide-in-from-top-2">
                         <div className="flex flex-wrap gap-2 text-sm text-gray-500">
                             Suggested:
                             {['ISM', 'BEM', 'UCAD', 'ESP'].map(s => (
-                                <button key={s} onClick={() => setFilters({ ...filters, school: s })} className="text-primary font-bold hover:underline">
+                                <button key={s} onClick={() => setFilters(prev => ({ ...prev, school: s }))} className="text-primary font-bold hover:underline">
                                     {s}
                                 </button>
                             ))}
@@ -196,7 +185,7 @@ const ListingsScreen = () => {
                             max="500000"
                             step="5000"
                             value={filters.maxPrice}
-                            onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
+                            onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: Number(e.target.value) }))}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
                         />
                     </div>
@@ -208,10 +197,10 @@ const ListingsScreen = () => {
                         {['Room', 'Studio', 'Coloc', 'Apartment'].map(type => (
                             <button
                                 key={type}
-                                onClick={() => setFilters({ ...filters, type: filters.type === type ? "" : type })}
+                                onClick={() => setFilters(prev => ({ ...prev, type: prev.type === type ? "" : type }))}
                                 className={`px-4 py-2 rounded-xl text-sm font-bold border whitespace-nowrap transition-all ${filters.type === type
-                                        ? "bg-primary text-white border-primary"
-                                        : "bg-white text-gray-600 border-gray-200"
+                                    ? "bg-primary text-white border-primary"
+                                    : "bg-white text-gray-600 border-gray-200"
                                     }`}
                             >
                                 {type}
@@ -228,8 +217,8 @@ const ListingsScreen = () => {
                                 key={feat}
                                 onClick={() => toggleFeature(feat)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${filters.features.includes(feat)
-                                        ? "bg-black text-white border-black"
-                                        : "bg-white text-gray-600 border-gray-200"
+                                    ? "bg-black text-white border-black"
+                                    : "bg-white text-gray-600 border-gray-200"
                                     }`}
                             >
                                 {feat}
@@ -237,18 +226,47 @@ const ListingsScreen = () => {
                         ))}
                     </div>
                 )}
+
+                {/* ─── ACTIVE FILTERS PILLS ─── */}
+                <div className="px-4 pb-2 flex gap-2 flex-wrap">
+                    {filters.type && (
+                        <button
+                            onClick={() => setFilters(prev => ({ ...prev, type: "" }))}
+                            className="flex items-center gap-1 px-3 py-1 bg-gray-900 text-white rounded-full text-xs font-bold animate-in fade-in zoom-in"
+                        >
+                            {filters.type} <X size={12} />
+                        </button>
+                    )}
+                    {filters.features.map(f => (
+                        <button
+                            key={f}
+                            onClick={() => toggleFeature(f)}
+                            className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-bold animate-in fade-in zoom-in"
+                        >
+                            {f} <X size={12} />
+                        </button>
+                    ))}
+                    {filters.maxPrice < 300000 && (
+                        <button
+                            onClick={() => setFilters(prev => ({ ...prev, maxPrice: 300000 }))}
+                            className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-bold animate-in fade-in zoom-in"
+                        >
+                            &lt; {filters.maxPrice.toLocaleString()} F <X size={12} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* ─── Listings Feed ─── */}
             <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
-                {/* Recent Searches Hint (Only if Location active & empty) */}
+                {/* Recent Searches Hint */}
                 {activeCategory === 'location' && filters.location === "" && !showSavedOnly && (
                     <div className="py-2">
                         <div className="flex gap-2 overflow-x-auto no-scrollbar">
                             {["Mermoz", "Plateau", "Almadies"].map((term) => (
                                 <button
                                     key={term}
-                                    onClick={() => setFilters({ ...filters, location: term })}
+                                    onClick={() => setFilters(prev => ({ ...prev, location: term }))}
                                     className="px-4 py-2 bg-white border border-gray-100 rounded-full text-xs font-bold text-gray-500 whitespace-nowrap active:scale-95 transition-transform"
                                 >
                                     <Search size={12} className="inline mr-1" />
@@ -262,13 +280,26 @@ const ListingsScreen = () => {
                 {/* Results Header */}
                 <div className="flex items-center justify-between pb-2 pt-2">
                     <h2 className="font-bold text-gray-900">
-                        {loading ? "Searching..." : showSavedOnly ? `${displayedListings.length} Saved Items` : `${displayedListings.length} places found`}
+                        {loading ? "Finding matches..." : showSavedOnly ? `${displayedListings.length} Saved Items` : `${displayedListings.length} places found`}
                     </h2>
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+                    // Skeleton Loading
+                    <div className="space-y-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="bg-white rounded-[1.5rem] overflow-hidden border border-gray-100">
+                                <Skeleton className="h-48 w-full" />
+                                <div className="p-4 space-y-3">
+                                    <Skeleton className="h-6 w-3/4" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                    <div className="flex justify-between pt-2">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-6 w-24" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : displayedListings.length > 0 ? (
                     displayedListings.map((listing) => {
@@ -301,6 +332,19 @@ const ListingsScreen = () => {
                                         alt={listing.title}
                                         className="w-full h-full object-cover"
                                     />
+                                    {/* Feature Icons Overlay */}
+                                    <div className="absolute bottom-2 left-2 flex gap-1">
+                                        {listing.features && listing.features.slice(0, 3).map((f: string) => (
+                                            <div key={f} className="w-6 h-6 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 shadow-sm" title={f}>
+                                                {getFeatureIcon(f)}
+                                            </div>
+                                        ))}
+                                        {(listing.features?.length || 0) > 3 && (
+                                            <div className="w-6 h-6 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-xs font-bold text-gray-700 shadow-sm">
+                                                +{listing.features.length - 3}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Content */}
@@ -362,16 +406,22 @@ const ListingsScreen = () => {
                         );
                     })
                 ) : (
+                    // Smart Empty State
                     <div className="text-center py-20 text-gray-400">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            {showSavedOnly ? <Bookmark size={32} className="text-gray-300" /> : <Home size={32} className="text-gray-300" />}
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                            {showSavedOnly ? <Bookmark size={32} className="text-gray-300" /> : <Search size={32} className="text-gray-300" />}
                         </div>
-                        <p className="font-semibold">No listings found</p>
-                        <p className="text-sm max-w-[200px] mx-auto mt-1">
-                            {showSavedOnly ? "Mark rooms as favorites to see them here" : "Try adjusting your filters"}
+                        <h3 className="font-bold text-lg text-gray-900 mb-1">No Matches Found</h3>
+                        <p className="text-sm max-w-[240px] mx-auto text-gray-500">
+                            {showSavedOnly ? "You haven't saved any listings yet." : "We couldn't find any places matching your filters. Try widening your search?"}
                         </p>
                         {!showSavedOnly && (
-                            <button onClick={() => setFilters({ location: "", minPrice: 0, maxPrice: 300000, type: "", features: [], school: "" })} className="text-primary font-bold text-sm mt-4">Clear all filters</button>
+                            <button
+                                onClick={clearFilters}
+                                className="mt-6 px-6 py-2 bg-black text-white rounded-full text-sm font-bold shadow-lg shadow-black/20 hover:scale-105 transition-transform"
+                            >
+                                Clear All Filters
+                            </button>
                         )}
                     </div>
                 )}

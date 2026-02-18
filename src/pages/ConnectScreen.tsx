@@ -17,13 +17,13 @@ const trendingTopics = [
   { title: "Music Jam Sessions 🎵", members: 87, tag: "Social" },
 ];
 
-const ExploreScreen = () => {
+const ConnectScreen = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col pb-24">
       {/* Header */}
       <div className="px-5 pt-4">
-        <h1 className="text-2xl font-black text-foreground">News</h1>
-        <p className="text-sm text-muted-foreground font-medium mt-0.5">Discover communities & people</p>
+        <h1 className="text-2xl font-black text-foreground">Connect</h1>
+        <p className="text-sm text-muted-foreground font-medium mt-0.5">Find people nearby</p>
       </div>
 
       {/* Search */}
@@ -79,4 +79,4 @@ const ExploreScreen = () => {
   );
 };
 
-export default ExploreScreen;
+export default ConnectScreen;

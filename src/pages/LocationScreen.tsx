@@ -4,6 +4,8 @@ import { Search, Home, BedDouble, Users, MapPin, Plus, Check } from "lucide-reac
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AsyncSelect } from "@/components/ui/async-select";
+import { searchLocations, Location as NominatimLocation } from "@/services/locationService";
 
 interface LocationItem {
     city: string;
@@ -232,53 +234,61 @@ const LocationScreen = () => {
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
                         Where are you located?
                     </label>
-                    <div className="relative">
-                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Type any city, campus, neighborhood..."
-                            value={query}
-                            onChange={(e) => {
-                                setQuery(e.target.value);
-                                setShowResults(true);
-                                setSelectedLocation(null);
-                            }}
-                            onFocus={() => setShowResults(true)}
-                            className="w-full rounded-xl border border-gray-200 bg-white pl-11 pr-4 py-3.5 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                    </div>
+                    <AsyncSelect
+                        value={query}
+                        onChange={(val) => {
+                            setQuery(val);
+                            // If user clears input, clear selection
+                            if (!val) setSelectedLocation(null);
+                        }}
+                        onSelect={(item: NominatimLocation) => {
+                            // Format: "City, Country"
+                            const parts = item.display_name.split(',').map(p => p.trim());
+                            const city = parts[0];
+                            const country = parts[parts.length - 1]; // Usually country is last
 
-                    {/* Search Results + Custom option */}
-                    {showResults && query.trim().length > 0 && (
-                        <div className="absolute z-10 mt-1 w-[calc(100%-2.5rem)] max-w-sm rounded-xl border border-gray-100 bg-white shadow-xl overflow-hidden">
-                            {filtered.map((loc, i) => (
-                                <button
-                                    key={`${loc.city}-${loc.campus}-${i}`}
-                                    onClick={() => handleSelect(loc)}
-                                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-                                >
-                                    <MapPin size={14} className="text-secondary mt-0.5 flex-shrink-0" />
-                                    <div>
-                                        <p className="text-sm font-bold text-foreground">
-                                            {loc.city}, {loc.country}
-                                        </p>
-                                        {loc.campus && (
-                                            <p className="text-xs text-muted-foreground">{loc.campus}</p>
-                                        )}
-                                    </div>
-                                </button>
-                            ))}
-                            {/* Use custom location */}
-                            <button
-                                onClick={handleUseCustom}
-                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/5 transition-colors text-left border-t border-gray-100"
-                            >
-                                <Plus size={14} className="text-primary flex-shrink-0" />
-                                <p className="text-sm font-bold text-primary">
-                                    Use "{query.trim()}"
-                                </p>
-                            </button>
-                        </div>
+                            const loc: LocationItem = {
+                                city: city,
+                                country: country, // Simple extraction, might need better parsing for Nominatim
+                            };
+                            handleSelect(loc);
+                        }}
+                        fetcher={searchLocations}
+                        getLabel={(item: NominatimLocation) => item.display_name}
+                        renderOption={(item: NominatimLocation) => (
+                            <div className="flex items-start gap-3">
+                                <MapPin size={16} className="text-secondary mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="text-sm font-bold text-foreground">
+                                        {item.display_name.split(',')[0]}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate max-w-[250px]">
+                                        {item.display_name}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        placeholder="Type any city, neighborhood..."
+                        icon={Search}
+                    />
+
+                    {/* Custom/Fallback Option logic handled by AsyncSelect effectively, but if we want explicit 'Use X' button, 
+                        we can add it to the renderOption or use the 'no results' state of AsyncSelect if we exposed it. 
+                        For now, assuming Nominatim covers most. 
+                        If we want to allow custom entry, we need to handle the case where onSelect isn't called but user hits 'Next'.
+                        The current logic in handleContinue uses selectedLocation.
+                        We can fallback: if no selectedLocation but query exists, treat as custom.
+                    */}
+                    {query.trim().length > 0 && !selectedLocation && (
+                        <button
+                            onClick={handleUseCustom}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/5 transition-colors text-left border-t border-gray-100 mt-2 bg-white rounded-xl border"
+                        >
+                            <Plus size={14} className="text-primary flex-shrink-0" />
+                            <p className="text-sm font-bold text-primary">
+                                Use "{query.trim()}"
+                            </p>
+                        </button>
                     )}
 
                     {/* Selected Badge */}

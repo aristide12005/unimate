@@ -1,4 +1,4 @@
-import { Home, Users, Newspaper, MessageCircle } from "lucide-react";
+import { Home, Users, Radio, MessageCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUnread } from "@/contexts/UnreadContext";
 
@@ -28,11 +28,11 @@ const BottomNav = () => {
       </button>
 
       <button
-        onClick={() => navigate("/explore")}
-        className={`flex flex-col items-center gap-1 transition-colors ${isActive("/explore") ? "text-primary" : "text-gray-400"}`}
+        onClick={() => navigate("/connect")}
+        className={`flex flex-col items-center gap-1 transition-colors ${isActive("/connect") ? "text-primary" : "text-gray-400"}`}
       >
-        <Newspaper size={24} strokeWidth={isActive("/explore") ? 2.5 : 2} />
-        <span className="text-[10px] font-bold">News</span>
+        <Radio size={24} strokeWidth={isActive("/connect") ? 2.5 : 2} />
+        <span className="text-[10px] font-bold">Connect</span>
       </button>
 
       <button
