@@ -40,6 +40,7 @@ const PostListingScreen = () => {
                     title,
                     type,
                     price,
+                    price_amount: Number(price.replace(/[^0-9.-]+/g, "")), // Ensure numeric value
                     location,
                     description,
                     features, // Save amenities

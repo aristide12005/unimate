@@ -14,44 +14,59 @@ const UserListingsScreen = () => {
     useEffect(() => {
         const fetchListings = async () => {
             if (!id) return;
-            const isMockId = !isNaN(Number(id));
 
-            if (isMockId) {
-                const listings = MOCK_LISTINGS.filter((l) => l.author.id === Number(id));
-                setUserListings(listings);
-                setLoading(false);
-            } else {
-                // Fetch from Supabase
-                // Query listings where author_id equals the profile id (which is what we have in URL)
-                const { data, error } = await supabase
-                    .from('listings')
-                    .select(`
-                        *,
-                        author:author_id (
-                            id,
-                            first_name,
-                            last_name,
-                            username,
-                            avatar_url
-                        )
-                    `)
-                    .eq('author_id', id)
-                    .order('created_at', { ascending: false });
+            // Check if it's strictly the mock user ID (assuming standard mock ID is 123 or similar known mocks)
+            // Otherwise, treat everything as potential Supabase ID to avoid hiding real data that happens to have numeric ID.
+            // Actually, best approach: Try Supabase first. If no results/error, THEN maybe check mocks (or just show empty).
+            // But let's stick to the user's fix: "Remove the isMockId logic and just fetch from Supabase".
 
-                if (data && !error) {
-                    const formattedData = data.map(item => ({
+            setLoading(true);
+
+            // Fetch from Supabase
+            const { data, error } = await supabase
+                .from('listings')
+                .select(`
+                    *,
+                    author:author_id (
+                        id,
+                        first_name,
+                        last_name,
+                        username,
+                        avatar_url
+                    )
+                `)
+                .eq('author_id', id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching user listings:", error);
+                // Optionally fallback to mocks here if truly needed, but safer to show empty/error state for real app.
+            }
+
+            if (data) {
+                const formattedData = data.map(item => {
+                    // Safe fallback for null author (RLS restricted)
+                    const author = item.author || {
+                        id: 'unknown',
+                        first_name: 'Unknown',
+                        last_name: 'User',
+                        username: 'unknown',
+                        avatar_url: null
+                    };
+
+                    return {
                         ...item,
                         author: {
-                            id: item.author.id,
-                            name: `${item.author.first_name || ''} ${item.author.last_name || ''}`.trim() || item.author.username,
-                            avatar: item.author.avatar_url
+                            id: author.id,
+                            name: `${author.first_name || ''} ${author.last_name || ''}`.trim() || author.username,
+                            avatar: author.avatar_url
                         },
                         postedAt: new Date(item.created_at).toLocaleDateString()
-                    }));
-                    setUserListings(formattedData);
-                }
-                setLoading(false);
+                    };
+                });
+                setUserListings(formattedData);
             }
+            setLoading(false);
         };
         fetchListings();
     }, [id]);

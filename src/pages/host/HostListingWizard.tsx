@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +34,38 @@ export default function HostListingWizard() {
         housing_rules: INITIAL_HOUSING_RULES
     });
 
+    // Check for edit mode
+    const [searchParams] = useSearchParams();
+    const editId = searchParams.get('edit');
+
+    useEffect(() => {
+        if (!editId || !profile) return;
+
+        const fetchListingToEdit = async () => {
+            const { data, error } = await supabase
+                .from('listings')
+                .select('*')
+                .eq('id', Number(editId))
+                .eq('author_id', profile.id) // Security check
+                .single();
+
+            if (data && !error) {
+                setFormData({
+                    title: data.title,
+                    type: data.type,
+                    price: Number(data.price_amount) || 0, // Use numeric amount
+                    location: data.location,
+                    description: data.description,
+                    features: data.features || [],
+                    image_url: data.image,
+                    housing_rules: (data.housing_rules as any) || INITIAL_HOUSING_RULES
+                });
+                toast.info("Editing existing listing");
+            }
+        };
+        fetchListingToEdit();
+    }, [editId, profile]);
+
     const updateFormData = (updates: Partial<ListingFormData>) => {
         setFormData(prev => ({ ...prev, ...updates }));
     };
@@ -66,29 +97,58 @@ export default function HostListingWizard() {
 
         setLoading(true);
         try {
-            // Create listing with JSONB housing_rules
-            const { data, error } = await supabase
-                .from('listings')
-                .insert({
-                    title: formData.title,
-                    type: formData.type,
-                    price: formData.price.toString(),
-                    location: formData.location,
-                    description: formData.description,
-                    features: formData.features,
-                    image: formData.image_url,
-                    housing_rules: formData.housing_rules as any, // Cast to any for Json type
-                    author_id: profile.id,
-                    created_at: new Date().toISOString()
-                })
-                .select()
-                .single();
+            let data, error;
+
+            if (editId) {
+                // UPDATE existing listing
+                const result = await supabase
+                    .from('listings')
+                    .update({
+                        title: formData.title,
+                        type: formData.type,
+                        price: formData.price.toString(),
+                        price_amount: Number(formData.price),
+                        location: formData.location,
+                        description: formData.description,
+                        features: formData.features,
+                        image: formData.image_url,
+                        housing_rules: formData.housing_rules as any,
+                        // author_id: profile.id // No need to update author
+                    })
+                    .eq('id', Number(editId))
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            } else {
+                // CREATE new listing
+                const result = await supabase
+                    .from('listings')
+                    .insert({
+                        title: formData.title,
+                        type: formData.type,
+                        price: formData.price.toString(),
+                        price_amount: Number(formData.price), // Essential for filtering
+                        location: formData.location,
+                        description: formData.description,
+                        features: formData.features,
+                        image: formData.image_url,
+                        housing_rules: formData.housing_rules as any, // Cast to any for Json type
+                        author_id: profile.id,
+                        created_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                data = result.data;
+                error = result.error;
+            }
 
             if (error) throw error;
 
-            toast.success("Listing published successfully!");
+            toast.success(editId ? "Listing updated successfully!" : "Listing published successfully!");
             setSuccessId(data.id);
-            // navigate("/profile"); // Removed auto-redirect
 
         } catch (error: any) {
             console.error("Error publishing listing:", error);
@@ -105,7 +165,7 @@ export default function HostListingWizard() {
                     <Check size={48} className="text-green-600" />
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">You're Live!</h1>
-                <p className="text-gray-500 mb-8 max-w-xs">Your listing has been published and is now visible to students.</p>
+                <p className="text-gray-500 mb-8 max-w-xs">Your listing has been updated/published and is visible to students.</p>
 
                 <div className="flex flex-col gap-3 w-full max-w-xs">
                     <div className="flex flex-col gap-3 w-full max-w-sm animate-in slide-in-from-bottom-4 duration-700 delay-300">
@@ -136,7 +196,6 @@ export default function HostListingWizard() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
-            {/* ... Rest of existing JSX ... */}
             {/* Top Navigation */}
             <div className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -149,7 +208,6 @@ export default function HostListingWizard() {
                     </div>
                 </div>
                 <div className="w-12 h-12 relative flex items-center justify-center">
-                    {/* Circular Progress Indicator could go here */}
                     <div className="text-xs font-bold text-gray-400">{Math.round((currentStep / STEPS.length) * 100)}%</div>
                 </div>
             </div>

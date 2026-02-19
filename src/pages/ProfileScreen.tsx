@@ -242,6 +242,18 @@ const ProfileScreen = () => {
 
       {/* Menu */}
       <div className="mx-5 mt-5 space-y-2">
+
+        <button
+          onClick={() => navigate(`/user/${profile?.id}/places`)}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-orange-100 shadow-sm active:scale-[0.98] transition-transform mb-2"
+        >
+          <div className="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center">
+            <MapPin className="text-orange-600" size={18} />
+          </div>
+          <span className="text-sm font-bold text-orange-900 flex-1 text-left">My Places / Listings</span>
+          <ArrowRightIcon className="text-orange-600/70" size={18} />
+        </button>
+
         <button
           onClick={() => navigate("/post-room")}
           className="w-full flex items-center gap-3 p-4 rounded-2xl bg-primary shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform mb-4"
