@@ -280,7 +280,14 @@ const ListingsScreen = () => {
                 {/* Results Header */}
                 <div className="flex items-center justify-between pb-2 pt-2">
                     <h2 className="font-bold text-gray-900">
-                        {loading ? "Finding matches..." : showSavedOnly ? `${displayedListings.length} Saved Items` : `${displayedListings.length} places found`}
+                        {loading
+                            ? "Finding matches..."
+                            : showSavedOnly
+                                ? `${displayedListings.length} Saved Items`
+                                : (filters.query || filters.location || filters.type || filters.features.length > 0)
+                                    ? `${displayedListings.length} places found`
+                                    : "Explore uniMate"
+                        }
                     </h2>
                 </div>
 

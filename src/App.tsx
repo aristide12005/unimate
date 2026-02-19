@@ -31,6 +31,8 @@ import ActivityScreen from "./pages/ActivityScreen";
 import ProfileScreen from "./pages/ProfileScreen";
 import EditProfileScreen from "./pages/EditProfileScreen";
 import PostListingScreen from "./pages/PostListingScreen";
+import HostListingWizard from "./pages/host/HostListingWizard";
+import ContractRequestScreen from "./pages/contract/ContractRequestScreen";
 import OAuthCallback from "./pages/OAuthCallback";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./layouts/AdminLayout";
@@ -84,7 +86,8 @@ const App = () => (
                 <Route path="/activity" element={<ProtectedRoute requireProfile><ActivityScreen /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute requireProfile><ProfileScreen /></ProtectedRoute>} />
                 <Route path="/edit-profile" element={<ProtectedRoute requireProfile><EditProfileScreen /></ProtectedRoute>} />
-                <Route path="/post-room" element={<ProtectedRoute requireProfile><PostListingScreen /></ProtectedRoute>} />
+                <Route path="/post-room" element={<ProtectedRoute requireProfile><HostListingWizard /></ProtectedRoute>} />
+                <Route path="/contract/:id" element={<ProtectedRoute requireProfile><ContractRequestScreen /></ProtectedRoute>} />
                 <Route path="/admin-debug" element={<ProtectedRoute requireProfile><DiagnosticPage /></ProtectedRoute>} />
 
                 {/* Admin Auth */}

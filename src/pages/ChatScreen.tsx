@@ -163,6 +163,28 @@ const ChatScreen = () => {
         };
     }, [senderProfile, receiver]);
 
+    const [contract, setContract] = useState<any>(null);
+
+    // Fetch Contracts between these two users
+    useEffect(() => {
+        if (!senderProfile || !receiver?.id) return;
+
+        const fetchContract = async () => {
+            const { data } = await supabase
+                .from('contracts' as any)
+                .select('*, listing:listings(title, image)')
+                .or(`and(host_id.eq.${senderProfile.id},student_id.eq.${receiver.id}),and(host_id.eq.${receiver.id},student_id.eq.${senderProfile.id})`)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (data) setContract(data);
+        };
+
+        fetchContract();
+    }, [senderProfile, receiver]);
+
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
@@ -466,6 +488,33 @@ const ChatScreen = () => {
 
             {/* ─── Chat Body (Content with Padding) ─── */}
             <div className="w-full pt-24 px-4">
+                {/* Contract Status Banner */}
+                {contract && contract.status === 'pending' && (
+                    <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center justify-between shadow-sm animate-in slide-in-from-top-4 duration-500">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            {contract.listing?.image && (
+                                <img
+                                    src={contract.listing.image}
+                                    alt="Property"
+                                    className="w-12 h-12 rounded-lg object-cover border border-orange-100 flex-shrink-0"
+                                />
+                            )}
+                            <div className="min-w-0">
+                                <h3 className="font-bold text-gray-900 text-sm truncate">
+                                    {contract.listing?.title || "Arrangement Request"}
+                                </h3>
+                                <p className="text-xs text-orange-600 font-medium">Pending Agreement</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => navigate(`/contract/${contract.id}`)}
+                            className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-lg shadow-md shadow-orange-200 hover:bg-orange-600 active:scale-95 transition-all flex-shrink-0"
+                        >
+                            View
+                        </button>
+                    </div>
+                )}
+
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center opacity-60 space-y-3 animate-in fade-in duration-700">
                         <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-white rounded-full flex items-center justify-center mb-2 shadow-inner">

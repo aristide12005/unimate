@@ -17,7 +17,7 @@ const INITIAL_FILTERS: SearchFilters = {
     query: "",
     location: "",
     minPrice: 0,
-    maxPrice: 300000,
+    maxPrice: 10000000, // Increased to 10M to ensure all listings are visible by default
     type: "",
     features: [],
     school: ""
@@ -103,24 +103,37 @@ export const useListings = () => {
 
                 const { data, error } = await query.order('created_at', { ascending: false });
 
+                console.log("Supabase Listings Fetch:", { data, error }); // DEBUG LOG
+
                 if (error) throw error;
 
-                if (data) {
-                    const formattedData = data.map(item => ({
-                        ...item,
-                        author: {
-                            id: item.author.id,
-                            name: `${item.author.first_name || ''} ${item.author.last_name || ''}`.trim() || item.author.username,
-                            avatar: item.author.avatar_url,
-                            backgroundImage: item.author.background_image,
-                            age: item.author.age,
-                            gender: item.author.gender,
-                            bio: item.author.bio,
-                            occupation: item.author.occupation,
-                            school: item.author.school_company
-                        },
-                        postedAt: new Date(item.created_at).toLocaleDateString()
-                    }));
+                if (data && data.length > 0) {
+                    const formattedData = data.map(item => {
+                        // Handle missing author gracefully
+                        const author = item.author || {
+                            id: 'unknown',
+                            first_name: 'Unknown',
+                            last_name: 'User',
+                            username: 'unknown',
+                            avatar_url: null
+                        };
+
+                        return {
+                            ...item,
+                            author: {
+                                id: author.id,
+                                name: `${author.first_name || ''} ${author.last_name || ''}`.trim() || author.username || 'Anonymous',
+                                avatar: author.avatar_url,
+                                backgroundImage: author.background_image,
+                                age: author.age,
+                                gender: author.gender,
+                                bio: author.bio,
+                                occupation: author.occupation,
+                                school: author.school_company
+                            },
+                            postedAt: new Date(item.created_at).toLocaleDateString()
+                        };
+                    });
 
                     // Client-side filter for School
                     if (filters.school) {
@@ -133,14 +146,14 @@ export const useListings = () => {
                         setListings(formattedData);
                     }
                 } else {
-                    setListings(MOCK_LISTINGS);
+                    console.warn("No listings found in DB. Showing empty state (NOT mocks).");
+                    setListings([]); // FORCE EMPTY STATE TO VERIFY DB CONNECTION
                 }
 
             } catch (err: any) {
                 console.error("Error searching listings:", err);
                 setError(err.message);
-                // Fallback to mock if DB fails (dev mode resilience)
-                setListings(MOCK_LISTINGS);
+                setListings([]); // Do not fall back to mocks on error, show the error state
             } finally {
                 setLoading(false);
             }

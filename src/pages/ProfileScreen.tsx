@@ -1,4 +1,4 @@
-import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefcase, GraduationCap, Phone, MessageCircle } from "lucide-react";
+import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefcase, GraduationCap, Phone, MessageCircle, Zap, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,8 @@ interface Profile {
   interests: string[] | null;
   phone_number: string | null;
   contact_type: string | null;
+  lifestyle: any | null;
+  languages: string[] | null;
 }
 
 const stats = [
@@ -186,6 +188,37 @@ const ProfileScreen = () => {
                 {profile.level_role && (
                   <p className="text-xs text-muted-foreground">{profile.level_role}</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {profile.lifestyle && (
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50 space-y-3">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
+                <Zap size={14} /> Lifestyle
+              </h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {Object.entries(profile.lifestyle).map(([key, value]) => value && (
+                  <div key={key} className="flex flex-col bg-gray-50 p-2 rounded-lg">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase">{key}</span>
+                    <span className="font-semibold text-gray-700 capitalize">{String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {profile.languages && profile.languages.length > 0 && (
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-border/50">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase mb-2 flex items-center gap-2">
+                <Globe size={14} /> Languages
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {profile.languages.map(lang => (
+                  <span key={lang} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100">
+                    {lang}
+                  </span>
+                ))}
               </div>
             </div>
           )}

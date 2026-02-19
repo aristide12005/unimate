@@ -3,27 +3,150 @@ import { ArrowLeft, X, Bookmark, Share, Send, MapPin, MessageCircle, Copy } from
 import { useListings } from "@/hooks/useListings";
 import { toast } from "sonner";
 import { ShareDialog } from "@/components/ShareDialog";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCompatibility } from "@/hooks/useCompatibility";
 
 const ListingDetailsScreen = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { listings, loading, savedListingIds, toggleSave } = useListings();
+    const { user, profile } = useAuth() as any; // Temporary cast if type is missing profile
+    const [requesting, setRequesting] = useState(false);
 
-    const listing = listings.find((l) => l.id === Number(id));
+    // Compatibility Hook
+    // We pass the listing (which contains housing_rules) and potentially listing.author
+    // Since listing might be null initially, we verify inside the render or effect, but the hook handles undefined safely.
+    const listingForHook = singleListing;
+    const compatibility = useCompatibility(listingForHook);
+
+    // Import ContractService and Auth at top if needed
+    // ...
+
+    const handleRequestArrangement = async () => {
+        if (!user || !profile) {
+            toast.error("Please log in to request an arrangement");
+            navigate('/login');
+            return;
+        }
+
+        if (!listing) return;
+
+        setRequesting(true);
+        try {
+            // Check if contract already exists (optional, skippable for MVP)
+
+            const { error } = await supabase
+                .from('contracts' as any)
+                .insert({
+                    host_id: listing.author.id,
+                    student_id: profile.id, // Reverting to profile.id as contracts table references profiles.id
+                    listing_id: listing.id,
+                    terms: listing.housing_rules || {}, // Snapshot current rules
+                    status: 'pending'
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            toast.success("Arrangement Requested!");
+            // Navigate to chats or show success modal
+            navigate(`/chat/${listing.author.id}`);
+
+        } catch (error: any) {
+            console.error(error);
+            toast.error("Failed to send request");
+        } finally {
+            setRequesting(false);
+        }
+    };
+
+    const [singleListing, setSingleListing] = useState<any>(null);
+    const [loadingSingle, setLoadingSingle] = useState(true);
+
+    useEffect(() => {
+        const fetchListing = async () => {
+            if (!id) return;
+
+            // Try to find in existing list first (cache)
+            const cached = listings.find(l => l.id === Number(id));
+            if (cached) {
+                setSingleListing(cached);
+                setLoadingSingle(false);
+                return;
+            }
+
+            // Fallback: Fetch from DB directly
+            const { data, error } = await supabase
+                .from('listings')
+                .select(`
+                    *,
+                    author:author_id (
+                        id,
+                        first_name,
+                        last_name,
+                        username,
+                        avatar_url,
+                        background_image,
+                        age,
+                        gender,
+                        bio,
+                        occupation,
+                        school_company
+                    )
+                `)
+                .eq('id', Number(id))
+                .single();
+
+            if (data) {
+                setSingleListing({
+                    ...data,
+                    author: {
+                        id: data.author.id,
+                        name: `${data.author.first_name || ''} ${data.author.last_name || ''}`.trim() || data.author.username,
+                        avatar: data.author.avatar_url,
+                        backgroundImage: data.author.background_image,
+                        age: data.author.age,
+                        gender: data.author.gender,
+                        bio: data.author.bio,
+                        occupation: data.author.occupation,
+                        school: data.author.school_company
+                    },
+                    postedAt: new Date(data.created_at).toLocaleDateString()
+                });
+            }
+            setLoadingSingle(false);
+        };
+
+        fetchListing();
+    }, [id, listings]);
+
+    const listing = singleListing;
     const isSaved = listing ? savedListingIds.has(listing.id) : false;
 
-    if (loading) {
+    if (loadingSingle) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     if (!listing) {
-        return <div className="p-8 text-center">Listing not found</div>;
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+                <p className="text-gray-500 font-medium">Listing not found</p>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="mt-4 px-4 py-2 bg-gray-100 rounded-full text-sm font-bold text-gray-700"
+                >
+                    Go Back
+                </button>
+            </div>
+        );
     }
-
     const shareUrl = window.location.href;
     const shareTitle = `Check out this place: ${listing.title}`;
     const shareDesc = `${listing.title} in ${listing.location} - ${listing.price}/month`;
@@ -83,6 +206,32 @@ const ListingDetailsScreen = () => {
                     <span>{listing.location}</span>
                 </div>
 
+                {/* Compatibility Score */}
+                {compatibility && !compatibility.loading && (
+                    <div className="mb-6 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 flex items-center justify-between shadow-sm">
+                        <div>
+                            <h3 className="text-sm font-bold text-indigo-900 flex items-center gap-2">
+                                ✨ Compatibility Match
+                            </h3>
+                            <p className="text-xs text-indigo-600 mt-1 font-medium">
+                                {compatibility.score >= 80 ? "Great Match!" : compatibility.score >= 50 ? "Good Potential" : "Low Compatibility"}
+                            </p>
+                            <div className="flex gap-1 mt-2 flex-wrap">
+                                {compatibility.matches.slice(0, 2).map((m, i) => (
+                                    <span key={i} className="text-[10px] px-2 py-0.5 bg-white/60 text-indigo-700 rounded-full border border-indigo-100">{m}</span>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="relative flex items-center justify-center w-14 h-14">
+                            <svg className="w-full h-full transform -rotate-90">
+                                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-indigo-100" />
+                                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray={150} strokeDashoffset={150 - (150 * compatibility.score) / 100} className="text-indigo-600 transition-all duration-1000 ease-out" />
+                            </svg>
+                            <span className="absolute text-sm font-black text-indigo-700">{compatibility.score}%</span>
+                        </div>
+                    </div>
+                )}
+
                 {/* Info Card (Type & Price) */}
                 <div className="bg-gray-50 rounded-[1.5rem] p-6 mb-6 flex items-center justify-between border border-gray-100">
                     <div>
@@ -121,13 +270,25 @@ const ListingDetailsScreen = () => {
                     <span className="font-bold text-gray-900 text-sm">{listing.author.name}</span>
                 </div>
 
-                <button
-                    onClick={() => navigate(`/chat/${listing.author.id}`)}
-                    className="bg-primary text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors active:scale-95"
-                >
-                    <MessageCircle size={18} fill="currentColor" />
-                    Message
-                </button>
+                <div className="flex items-center gap-3 w-full">
+                    <button
+                        onClick={() => navigate(`/chat/${listing.author.id}`)}
+                        className="p-3 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors"
+                    >
+                        <MessageCircle size={24} />
+                    </button>
+                    <button
+                        onClick={handleRequestArrangement}
+                        disabled={requesting}
+                        className="flex-1 bg-primary text-white py-3 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/30 hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {requesting ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <>Request Arrangement <Send size={18} /></>
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );

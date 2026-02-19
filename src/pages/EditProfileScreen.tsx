@@ -24,6 +24,14 @@ interface ProfileData {
     interests: string[];
     phone_number: string;
     contact_type: "whatsapp" | "phone";
+    lifestyle: {
+        smoke: string;
+        pets: string;
+        schedule: string;
+        guests: string;
+        cleanliness: string;
+    };
+    languages: string[];
 }
 
 const INTERESTS_OPTIONS = [
@@ -68,7 +76,15 @@ const EditProfileScreen = () => {
         campus: "",
         interests: [],
         phone_number: "",
-        contact_type: "whatsapp"
+        contact_type: "whatsapp",
+        lifestyle: {
+            smoke: "",
+            pets: "",
+            schedule: "",
+            guests: "",
+            cleanliness: ""
+        },
+        languages: []
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,8 +114,16 @@ const EditProfileScreen = () => {
                     location_country: data.location_country || "",
                     campus: data.campus || "",
                     interests: data.interests || [],
-                    phone_number: data.phone_number || "",
-                    contact_type: data.contact_type || "whatsapp"
+                    phone_number: (data as any).phone_number || "", // Cast to any if types are outdated
+                    contact_type: (data as any).contact_type || "whatsapp",
+                    lifestyle: (data as any).lifestyle || {
+                        smoke: "",
+                        pets: "",
+                        schedule: "",
+                        guests: "",
+                        cleanliness: ""
+                    },
+                    languages: (data as any).languages || []
                 });
             }
             setLoading(false);
@@ -166,6 +190,8 @@ const EditProfileScreen = () => {
                 interests: formData.interests,
                 phone_number: formData.phone_number,
                 contact_type: formData.contact_type,
+                lifestyle: formData.lifestyle,
+                languages: formData.languages,
                 updated_at: new Date().toISOString()
             })
             .eq("user_id", user.id);
@@ -462,6 +488,105 @@ const EditProfileScreen = () => {
                                 placeholder="+221 77 000 00 00"
                             />
                         </div>
+                    </div>
+
+                    {/* LIFESTYLE */}
+                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+                        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                            Lifestyle & Habits
+                        </h2>
+
+                        {/* Smoking */}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Smoking Habits</label>
+                            <div className="flex gap-2">
+                                {['Non-smoker', 'Smoker', 'Outside only'].map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, smoke: opt } })}
+                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.smoke === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Pets */}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Pets</label>
+                            <div className="flex gap-2">
+                                {['No pets', 'Has pets', 'Likes pets'].map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, pets: opt } })}
+                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.pets === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Schedule */}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Daily Schedule</label>
+                            <div className="flex gap-2">
+                                {['Early Bird', 'Night Owl', 'Flexible'].map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, schedule: opt } })}
+                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.schedule === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Guests */}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Guests Frequency</label>
+                            <div className="flex gap-2">
+                                {['Never', 'Occasional', 'Frequent'].map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, guests: opt } })}
+                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.guests === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Cleanliness */}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Cleanliness</label>
+                            <div className="flex gap-2">
+                                {['Messy', 'Average', 'Neat Freak'].map(opt => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, cleanliness: opt } })}
+                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.cleanliness === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* LANGUAGES */}
+                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+                        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Languages</h2>
+                        <input
+                            value={formData.languages.join(", ")}
+                            onChange={(e) => setFormData({ ...formData, languages: e.target.value.split(",").map(s => s.trim()) })}
+                            className="w-full p-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all text-sm font-bold"
+                            placeholder="English, French, Wolof..."
+                        />
+                        <p className="text-xs text-gray-400">Separate with commas</p>
                     </div>
 
                     {/* INTERESTS */}
