@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MoreHorizontal, MessageCircle, ChevronRight, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { MOCK_LISTINGS } from "@/data/mockData";
 
 const UserProfileScreen = () => {
     const { id } = useParams();
@@ -14,66 +13,49 @@ const UserProfileScreen = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             if (!id) return;
+            setLoading(true);
 
-            // Check if ID is likely a UUID (Supabase) or Number (Mock)
-            const isMockId = !isNaN(Number(id));
+            // Fetch from Supabase
+            // Try fetching by 'id' first (most likely), then 'user_id' if not found?
+            let { data, error } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", id)
+                .single();
 
-            if (isMockId) {
-                const listing = MOCK_LISTINGS.find((l) => l.author.id === Number(id));
-                if (listing?.author) {
-                    setProfile({
-                        name: listing.author.name,
-                        avatar: listing.author.avatar,
-                        backgroundImage: listing.author.backgroundImage,
-                        gender: listing.author.gender,
-                        age: listing.author.age,
-                        occupation: "Student", // Default for mock
-                        bio: listing.author.bio,
-                        location: listing.location,
-                        id: listing.author.id
-                    });
-                }
-                setLoading(false);
-            } else {
-                // Fetch from Supabase
-                // Try fetching by 'id' first (most likely), then 'user_id' if not found?
-                // Actually, let's just use .or() if possible, but IDs are UUIDs so it might clash if we don't be careful.
-                // But we know 'id' and 'user_id' are both UUIDs.
-
-                let { data, error } = await supabase
+            if (error || !data) {
+                console.log("Profile not found by id, trying user_id...");
+                const retry = await supabase
                     .from("profiles")
                     .select("*")
-                    .eq("id", id)
+                    .eq("user_id", id)
                     .single();
-
-                if (error || !data) {
-                    console.log("Profile not found by id, trying user_id...");
-                    const retry = await supabase
-                        .from("profiles")
-                        .select("*")
-                        .eq("user_id", id)
-                        .single();
-                    data = retry.data;
-                    error = retry.error;
-                }
-
-                if (data && !error) {
-                    setProfile({
-                        name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.username || "User",
-                        avatar: data.avatar_url || "https://github.com/shadcn.png",
-                        backgroundImage: data.background_image,
-                        gender: data.gender || "N/A",
-                        age: data.age || "N/A",
-                        occupation: data.occupation || "N/A",
-                        bio: data.bio || "No bio yet.",
-                        location: data.location_city ? `${data.location_city}, ${data.location_country || ''}` : "Unknown Location",
-                        id: data.id
-                    });
-                } else {
-                    console.error("Error fetching profile:", error);
-                }
-                setLoading(false);
+                data = retry.data;
+                error = retry.error;
             }
+
+            if (data && !error) {
+                const profileData = data as any;
+                setProfile({
+                    name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || profileData.username || "User",
+                    avatar: profileData.avatar_url || "https://github.com/shadcn.png",
+                    backgroundImage: profileData.background_image,
+                    gender: profileData.gender || "N/A",
+                    age: profileData.age || "N/A",
+                    occupation: profileData.occupation || "N/A",
+                    bio: profileData.bio || "No bio yet.",
+                    location: profileData.location_city ? `${profileData.location_city}, ${profileData.location_country || ''}` : "Unknown Location",
+                    id: profileData.id,
+                    school_company: profileData.school_company,
+                    level_role: profileData.level_role,
+                    lifestyle: profileData.lifestyle,
+                    languages: profileData.languages,
+                    interests: profileData.interests
+                });
+            } else {
+                console.error("Error fetching profile:", error);
+            }
+            setLoading(false);
         };
         fetchProfile();
     }, [id]);

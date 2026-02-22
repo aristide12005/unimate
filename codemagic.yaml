@@ -1,0 +1,88 @@
+workflows:
+
+  # ── iOS: Unsigned IPA for AltStore distribution ─────────────────────────────
+  ios-altstore:
+    name: UniMate iOS (AltStore / Unsigned)
+    max_build_duration: 60
+    instance_type: mac_mini_m2   # Free tier eligible
+
+    environment:
+      node: 20.9.0
+      xcode: 16.2
+      java: 21
+
+    scripts:
+      - name: Install Node dependencies
+        script: npm ci
+
+      - name: Build web app (Vite)
+        script: npm run build
+
+      - name: Add iOS platform & sync
+        script: |
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Set bundle version from build number
+        script: |
+          PLIST="ios/App/App/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.$BUILD_NUMBER" "$PLIST"
+
+      - name: Write ExportOptions.plist
+        script: |
+          cat > /tmp/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>ad-hoc</string>
+              <key>compileBitcode</key>
+              <false/>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>thinning</key>
+              <string><none></string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Build & archive (unsigned)
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify
+
+      - name: Export unsigned IPA
+        script: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+            -exportPath "$CM_BUILD_DIR/ipa" \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO | xcbeautify
+
+    artifacts:
+      - $CM_BUILD_DIR/ipa/*.ipa
+      - $CM_BUILD_DIR/*.xcarchive
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - your@email.com           # ← Change this
+        notify:
+          success: true
+          failure: true

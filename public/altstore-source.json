@@ -1,0 +1,47 @@
+{
+    "name": "uniMate",
+    "identifier": "com.unimate.altstore-source",
+    "subtitle": "Connect with your circle. Learn faster with friends you trust.",
+    "description": "The official uniMate source for AltStore. uniMate helps students find housing, connect with others, and stay in their circle.",
+    "iconURL": "https://YOUR_DOMAIN/logo.png",
+    "headerURL": "https://YOUR_DOMAIN/logo.png",
+    "website": "https://YOUR_DOMAIN",
+    "tintColor": "#E28B44",
+    "featuredApps": [
+        "com.unimate.app"
+    ],
+    "apps": [
+        {
+            "name": "uniMate",
+            "bundleIdentifier": "com.unimate.app",
+            "developerName": "uniMate Team",
+            "subtitle": "Find housing. Connect with your circle.",
+            "localizedDescription": "uniMate is the student housing and social connection app. Find rooms, connect with trusted friends, manage contracts, and chat — all in one place.\n\nFeatures:\n• Browse student housing listings\n• Chat with hosts and housemates\n• Manage rental contracts\n• Connect with your university circle\n• Real-time notifications",
+            "iconURL": "https://YOUR_DOMAIN/logo.png",
+            "tintColor": "#E28B44",
+            "category": "social",
+            "screenshots": [],
+            "versions": [
+                {
+                    "version": "1.0.0",
+                    "buildVersion": "1",
+                    "date": "2026-02-21",
+                    "localizedDescription": "Initial release of uniMate for iOS via AltStore.",
+                    "downloadURL": "https://YOUR_DOMAIN/releases/unimate-1.0.0.ipa",
+                    "size": 0,
+                    "minOSVersion": "16.0",
+                    "maxOSVersion": "99.9"
+                }
+            ],
+            "appPermissions": {
+                "entitlements": [],
+                "privacy": {
+                    "NSCameraUsageDescription": "uniMate uses your camera to set your profile photo and upload listing images.",
+                    "NSPhotoLibraryUsageDescription": "uniMate accesses your photo library to select profile and listing photos.",
+                    "NSUserNotificationsUsageDescription": "uniMate sends notifications for new messages and housing alerts."
+                }
+            }
+        }
+    ],
+    "news": []
+}

@@ -226,22 +226,15 @@ const ListingDetailsScreen = () => {
                             </ShareDialog>
 
                             {/* Show Edit/Delete only if user is author */}
-                            {user && listing && user.id === listing.author.id && ( // Note: listing.author.id is Profile ID. User.id is Auth ID.
-                                // Wait, in AuthContext profile.id is what matches listing.author.id usually? 
-                                // In listings table, author_id is profile.id.
-                                // user.id is auth.uid().
-                                // FIX: We need to compare with profile.id if available, or fetch profile. 
-                                // AuthContext provides profile. Let's use profile.id.
-                                profile?.id === listing.author.id && (
-                                    <>
-                                        <DropdownMenuItem onClick={handleEdit} className="flex items-center gap-2 p-3 font-medium cursor-pointer rounded-lg hover:bg-gray-50 text-gray-700">
-                                            <Edit size={16} /> Edit Listing
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={handleDelete} className="flex items-center gap-2 p-3 font-medium cursor-pointer rounded-lg hover:bg-red-50 text-red-600 focus:text-red-600 focus:bg-red-50">
-                                            <Trash size={16} /> Delete Listing
-                                        </DropdownMenuItem>
-                                    </>
-                                )
+                            {listing && profile && listing.author.id === profile.id && (
+                                <>
+                                    <DropdownMenuItem onClick={handleEdit} className="flex items-center gap-2 p-3 font-medium cursor-pointer rounded-lg hover:bg-gray-50 text-gray-700">
+                                        <Edit size={16} /> Edit Listing
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleDelete} className="flex items-center gap-2 p-3 font-medium cursor-pointer rounded-lg hover:bg-red-50 text-red-600 focus:text-red-600 focus:bg-red-50">
+                                        <Trash size={16} /> Delete Listing
+                                    </DropdownMenuItem>
+                                </>
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>

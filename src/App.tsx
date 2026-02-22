@@ -87,6 +87,7 @@ const App = () => (
                 <Route path="/profile" element={<ProtectedRoute requireProfile><ProfileScreen /></ProtectedRoute>} />
                 <Route path="/edit-profile" element={<ProtectedRoute requireProfile><EditProfileScreen /></ProtectedRoute>} />
                 <Route path="/post-room" element={<ProtectedRoute requireProfile><HostListingWizard /></ProtectedRoute>} />
+                <Route path="/host/wizard" element={<ProtectedRoute requireProfile><HostListingWizard /></ProtectedRoute>} />
                 <Route path="/contract/:id" element={<ProtectedRoute requireProfile><ContractRequestScreen /></ProtectedRoute>} />
                 <Route path="/admin-debug" element={<ProtectedRoute requireProfile><DiagnosticPage /></ProtectedRoute>} />
 

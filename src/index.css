@@ -125,4 +125,31 @@
     scrollbar-width: none;
     /* Firefox */
   }
+
+  /* ── Capacitor / Native Safe Areas ─────────────────────────────── */
+  /* Prevents content from being hidden behind iPhone notch,
+     Dynamic Island, and Android gesture navigation bar.           */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Full safe area padding for containers that span edge-to-edge */
+  .safe-area-all {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }

@@ -13,7 +13,7 @@ const MobileWrapper = ({ children }: MobileWrapperProps) => {
     const location = useLocation();
 
     // Use the specific network IP provided by the user for the QR code
-    const currentUrl = "http://192.168.1.18:4173/";
+    const currentUrl = window.location.href;
 
     // If on admin routes, render children directly (Desktop View)
     if (location.pathname.startsWith("/admin")) {
@@ -22,8 +22,8 @@ const MobileWrapper = ({ children }: MobileWrapperProps) => {
 
     return (
         <div className="min-h-screen bg-gray-100 flex justify-center">
-            {/* Mobile Frame */}
-            <div className="w-full max-w-[430px] min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col">
+            {/* Mobile Frame - safe-top ensures content respects notch/status bar */}
+            <div className="w-full max-w-[430px] min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col safe-top">
                 {children}
             </div>
 
