@@ -4,7 +4,7 @@ workflows:
   ios-altstore:
     name: UniMate iOS (AltStore / Unsigned)
     max_build_duration: 60
-    instance_type: mac_mini_m2   # Free tier eligible
+    instance_type: mac_mini_m2
 
     environment:
       node: 22.13.1
@@ -18,10 +18,15 @@ workflows:
       - name: Build web app (Vite)
         script: npm run build
 
-      - name: Add iOS platform & sync
+      - name: Add iOS platform & install pods
         script: |
           npx cap add ios
-          npx cap sync ios
+          cd ios/App
+          pod install
+          cd ../..
+
+      - name: Sync Capacitor
+        script: npx cap copy ios
 
       - name: Set bundle version from build number
         script: |
@@ -62,7 +67,7 @@ workflows:
             archive \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO | xcbeautify
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Export unsigned IPA
         script: |
@@ -72,7 +77,7 @@ workflows:
             -exportPath "$CM_BUILD_DIR/ipa" \
             -exportOptionsPlist /tmp/ExportOptions.plist \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO | xcbeautify
+            CODE_SIGNING_REQUIRED=NO
 
     artifacts:
       - $CM_BUILD_DIR/ipa/*.ipa
