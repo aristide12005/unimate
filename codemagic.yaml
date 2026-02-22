@@ -7,7 +7,7 @@ workflows:
     instance_type: mac_mini_m2   # Free tier eligible
 
     environment:
-      node: 20.9.0
+      node: 22.13.1
       xcode: 16.2
       java: 21
 
