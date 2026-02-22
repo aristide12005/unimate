@@ -18,22 +18,15 @@ workflows:
       - name: Build web app (Vite)
         script: npm run build
 
-      - name: Add iOS platform & install pods
+      - name: Add iOS platform & sync
         script: |
           set -e
-          # Force-clean any partial ios/ dir so cap add always runs fresh
           rm -rf ios/
           npx cap add ios
-          # Verify Podfile was created by cap add
-          ls ios/App/Podfile
-          cd ios/App
-          pod install --repo-update
-          cd ../..
-          # Verify xcworkspace was created by pod install
+          npx cap copy ios
+          # Verify xcworkspace was created by cap add (Capacitor 7 uses SPM, no pod install needed)
           ls ios/App/App.xcworkspace
 
-      - name: Sync Capacitor
-        script: npx cap copy ios
 
       - name: Set bundle version from build number
         script: |
