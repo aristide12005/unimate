@@ -20,10 +20,17 @@ workflows:
 
       - name: Add iOS platform & install pods
         script: |
+          set -e
+          # Force-clean any partial ios/ dir so cap add always runs fresh
+          rm -rf ios/
           npx cap add ios
+          # Verify Podfile was created by cap add
+          ls ios/App/Podfile
           cd ios/App
-          pod install
+          pod install --repo-update
           cd ../..
+          # Verify xcworkspace was created by pod install
+          ls ios/App/App.xcworkspace
 
       - name: Sync Capacitor
         script: npx cap copy ios
