@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { MapPin, FileText, Sparkles } from "lucide-react";
+import { MapPin, FileText, Sparkles, Search } from "lucide-react";
 import { ListingFormData } from "@/types/host";
+import { AsyncSelect } from "@/components/ui/async-select";
+import { searchLocations, Location as NominatimLocation } from "@/services/locationService";
 
 interface StepProps {
     data: ListingFormData;
@@ -71,7 +73,7 @@ export default function Step1BasicInfo({ data, update }: StepProps) {
     };
 
     const handleNeighborhood = (nb: string) => {
-        update({ location: nb + ", Dakar" });
+        update({ location: nb + ", Dakar", latitude: undefined, longitude: undefined });
     };
 
     return (
@@ -91,8 +93,8 @@ export default function Step1BasicInfo({ data, update }: StepProps) {
                                 type="button"
                                 onClick={() => update({ type: rt.value })}
                                 className={`relative p-5 rounded-2xl border-2 text-left transition-all duration-200 hover:shadow-md active:scale-[0.98] ${selected
-                                        ? "border-gray-900 bg-gray-50 shadow-sm"
-                                        : "border-gray-200 bg-white hover:border-gray-300"
+                                    ? "border-gray-900 bg-gray-50 shadow-sm"
+                                    : "border-gray-200 bg-white hover:border-gray-300"
                                     }`}
                             >
                                 <span className="text-2xl mb-3 block">{rt.emoji}</span>
@@ -127,8 +129,8 @@ export default function Step1BasicInfo({ data, update }: StepProps) {
                                 type="button"
                                 onClick={() => handleNeighborhood(nb)}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${isSelected
-                                        ? "bg-gray-900 text-white border-gray-900"
-                                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:shadow-sm"
+                                    ? "bg-gray-900 text-white border-gray-900"
+                                    : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:shadow-sm"
                                     }`}
                             >
                                 {nb}
@@ -136,13 +138,39 @@ export default function Step1BasicInfo({ data, update }: StepProps) {
                         );
                     })}
                 </div>
-                <input
-                    type="text"
-                    value={data.location}
-                    onChange={(e) => update({ location: e.target.value })}
-                    placeholder="Or type a custom location…"
-                    className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all text-gray-900 placeholder:text-gray-400 text-sm"
-                />
+                <div className="relative w-full">
+                    <AsyncSelect
+                        value={data.location}
+                        onChange={(val) => update({ location: val, latitude: undefined, longitude: undefined })}
+                        onSelect={(item: NominatimLocation) => {
+                            const parts = item.display_name.split(',').map(p => p.trim());
+                            // Try to format nicely like "Neighborhood, City"
+                            const shortLoc = parts.length > 2 ? `${parts[0]}, ${parts[1]}` : item.display_name;
+                            update({
+                                location: shortLoc,
+                                latitude: parseFloat(item.lat),
+                                longitude: parseFloat(item.lon)
+                            });
+                        }}
+                        fetcher={searchLocations}
+                        getLabel={(item: NominatimLocation) => item.display_name}
+                        renderOption={(item: NominatimLocation) => (
+                            <div className="flex items-start gap-3 w-full">
+                                <MapPin size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                                <div className="text-left w-full overflow-hidden">
+                                    <p className="text-sm font-bold text-gray-900 truncate">
+                                        {item.display_name.split(',')[0]}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                        {item.display_name}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        placeholder="Search open street map..."
+                        icon={Search}
+                    />
+                </div>
             </div>
 
             {/* ─── Title & Price ─── */}

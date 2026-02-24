@@ -28,6 +28,8 @@ export default function HostListingWizard() {
         type: "Room",
         price: 0,
         location: "",
+        latitude: undefined,
+        longitude: undefined,
         description: "",
         features: [],
         image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
@@ -59,6 +61,8 @@ export default function HostListingWizard() {
                     type: row.type,
                     price: Number(row.price_amount) || 0,
                     location: row.location,
+                    latitude: row.latitude,
+                    longitude: row.longitude,
                     description: row.description,
                     features: row.features || [],
                     image_url: row.image,
@@ -115,6 +119,8 @@ export default function HostListingWizard() {
                         price: formData.price.toString(),
                         price_amount: Number(formData.price),
                         location: formData.location,
+                        latitude: formData.latitude,
+                        longitude: formData.longitude,
                         description: formData.description,
                         features: formData.features,
                         image: formData.image_url,
@@ -138,6 +144,8 @@ export default function HostListingWizard() {
                         price: formData.price.toString(),
                         price_amount: Number(formData.price),
                         location: formData.location,
+                        latitude: formData.latitude,
+                        longitude: formData.longitude,
                         description: formData.description,
                         features: formData.features,
                         image: formData.image_url,
@@ -247,10 +255,10 @@ export default function HostListingWizard() {
                                 key={s.id}
                                 onClick={() => s.id < currentStep && setCurrentStep(s.id)}
                                 className={`h-2.5 rounded-full transition-all duration-300 ${s.id === currentStep
-                                        ? 'w-10 bg-orange-400'
-                                        : s.id < currentStep
-                                            ? 'w-2.5 bg-green-400 cursor-pointer hover:bg-green-300'
-                                            : 'w-2.5 bg-gray-600'
+                                    ? 'w-10 bg-orange-400'
+                                    : s.id < currentStep
+                                        ? 'w-2.5 bg-green-400 cursor-pointer hover:bg-green-300'
+                                        : 'w-2.5 bg-gray-600'
                                     }`}
                             />
                         ))}
@@ -278,10 +286,10 @@ export default function HostListingWizard() {
                                     <div
                                         key={s.id}
                                         className={`h-1.5 rounded-full transition-all duration-300 ${s.id === currentStep
-                                                ? 'w-6 bg-primary'
-                                                : s.id < currentStep
-                                                    ? 'w-1.5 bg-green-400'
-                                                    : 'w-1.5 bg-gray-200'
+                                            ? 'w-6 bg-primary'
+                                            : s.id < currentStep
+                                                ? 'w-1.5 bg-green-400'
+                                                : 'w-1.5 bg-gray-200'
                                             }`}
                                     />
                                 ))}

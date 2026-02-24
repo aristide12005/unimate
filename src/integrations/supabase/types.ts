@@ -49,7 +49,9 @@ export type Database = {
           distance: string | null
           id: number
           image: string
+          latitude: number | null
           location: string
+          longitude: number | null
           posted_at: string | null
           price: string
           title: string
@@ -62,7 +64,9 @@ export type Database = {
           distance?: string | null
           id?: number
           image: string
+          latitude?: number | null
           location: string
+          longitude?: number | null
           posted_at?: string | null
           price: string
           title: string
@@ -75,7 +79,9 @@ export type Database = {
           distance?: string | null
           id?: number
           image?: string
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           posted_at?: string | null
           price?: string
           title?: string
@@ -179,6 +185,7 @@ export type Database = {
           bio: string | null
           birthday: string | null
           campus: string | null
+          custom_conditions: string | null
           created_at: string
           department: string | null
           job_title: string | null
@@ -208,6 +215,7 @@ export type Database = {
           bio?: string | null
           birthday?: string | null
           campus?: string | null
+          custom_conditions?: string | null
           created_at?: string
           department?: string | null
           job_title?: string | null
@@ -237,6 +245,7 @@ export type Database = {
           bio?: string | null
           birthday?: string | null
           campus?: string | null
+          custom_conditions?: string | null
           created_at?: string
           department?: string | null
           job_title?: string | null

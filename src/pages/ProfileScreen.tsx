@@ -1,4 +1,4 @@
-import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefcase, GraduationCap, Phone, MessageCircle, Zap, Globe } from "lucide-react";
+import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefcase, GraduationCap, Phone, MessageCircle, Zap, Globe, Home } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
+  id: string;
   first_name: string | null;
   last_name: string | null;
   username: string | null;
@@ -23,6 +24,8 @@ interface Profile {
   contact_type: string | null;
   lifestyle: any | null;
   languages: string[] | null;
+  host_mode_active?: boolean;
+  host_persona?: string | null;
 }
 
 const stats = [
@@ -34,8 +37,11 @@ const stats = [
 const ProfileScreen = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isHostMode, setIsHostMode] = useState(false);
+  const [showPersonaSelector, setShowPersonaSelector] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -47,9 +53,51 @@ const ProfileScreen = () => {
       .single()
       .then(({ data }) => {
         setProfile(data as unknown as Profile);
+
+        const hostActive = (data as any).host_mode_active || false;
+        setIsHostMode(hostActive);
         setLoading(false);
+
+        // Auto-activate host mode if routed from Desktop Header "Become a Host"
+        if (location.search.includes("activateHost=true") && !hostActive) {
+          // We explicitly call this to trigger the same UI flow
+          setShowPersonaSelector(true);
+          setIsHostMode(true);
+          supabase.from("profiles").update({ host_mode_active: true } as any).eq("id", (data as any).id);
+
+          // Clean up the URL
+          navigate("/profile", { replace: true });
+        }
       });
-  }, [user]);
+  }, [user, location.search, navigate]);
+
+  const toggleHostMode = async () => {
+    const newMode = !isHostMode;
+    setIsHostMode(newMode);
+
+    // If activating and no persona selected, show selector
+    if (newMode && !profile?.host_persona) {
+      setShowPersonaSelector(true);
+    }
+
+    // Save to profile
+    if (user) {
+      await supabase.from("profiles").update({ host_mode_active: newMode } as any).eq("id", profile?.id || user.id);
+    }
+  };
+
+  const selectPersona = async (persona: string) => {
+    const updatedProfile = { ...profile, host_persona: persona } as Profile;
+    setProfile(updatedProfile);
+    setShowPersonaSelector(false);
+
+    if (user && profile?.id) {
+      await supabase.from("profiles").update({ host_persona: persona } as any).eq("id", profile.id);
+    }
+  };
+
+  const hostModeColors = isHostMode ? "bg-indigo-50 text-indigo-900 border-indigo-200" : "bg-card text-foreground border-border/50";
+  const primaryButtonColors = isHostMode ? "bg-indigo-600 shadow-indigo-600/20" : "bg-primary shadow-primary/20";
 
   const handleSignOut = async () => {
     await signOut();
@@ -117,8 +165,68 @@ const ProfileScreen = () => {
         </button>
       </div>
 
+      {/* Host Mode Toggle Card */}
+      <div className="mx-5 mt-4">
+        <div className={`rounded-3xl p-5 shadow-sm border transition-colors duration-300 flex items-center justify-between ${isHostMode ? "bg-gradient-to-r from-indigo-600 to-indigo-800 text-white border-indigo-700" : "bg-white border-gray-200"}`}>
+          <div>
+            <h2 className={`text-lg font-black ${isHostMode ? "text-white" : "text-gray-900"}`}>Host on uniMate</h2>
+            <p className={`text-xs font-semibold mt-1 ${isHostMode ? "text-indigo-100" : "text-gray-500"}`}>
+              {isHostMode ? (profile?.host_persona || 'Pro Dashboard') : 'Switch to manage listings'}
+            </p>
+          </div>
+          <button
+            onClick={toggleHostMode}
+            className={`w-14 h-8 rounded-full flex items-center transition-colors duration-300 p-1 ${isHostMode ? "bg-indigo-400" : "bg-gray-200"}`}
+          >
+            <div className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 ${isHostMode ? "translate-x-6" : "translate-x-0"}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Persona Selector Overlay */}
+      {showPersonaSelector && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-5">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-black text-center mb-2">Choose Your Role</h3>
+            <p className="text-sm text-gray-500 text-center mb-6">How will you use the Host Dashboard?</p>
+
+            <div className="space-y-3">
+              <button onClick={() => selectPersona('Student Seeker')} className="w-full p-4 rounded-2xl border-2 border-indigo-100 hover:border-indigo-600 hover:bg-indigo-50 transition-all flex items-center gap-4 text-left">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <GraduationCap size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Student Seeker</h4>
+                  <p className="text-xs text-gray-500">I need a roommate</p>
+                </div>
+              </button>
+
+              <button onClick={() => selectPersona('Landlord')} className="w-full p-4 rounded-2xl border-2 border-indigo-100 hover:border-indigo-600 hover:bg-indigo-50 transition-all flex items-center gap-4 text-left">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <Home size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Landlord</h4>
+                  <p className="text-xs text-gray-500">I own property</p>
+                </div>
+              </button>
+
+              <button onClick={() => selectPersona('Commissioner')} className="w-full p-4 rounded-2xl border-2 border-indigo-100 hover:border-indigo-600 hover:bg-indigo-50 transition-all flex items-center gap-4 text-left">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <Briefcase size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Commissioner</h4>
+                  <p className="text-xs text-gray-500">I manage rentals</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Profile Card */}
-      <div className="mx-5 mt-5 bg-card rounded-3xl p-6 shadow-sm border border-border/50">
+      <div className={`mx-5 mt-5 rounded-3xl p-6 shadow-sm border transition-colors ${hostModeColors}`}>
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-3">
             <div className="w-24 h-24 rounded-full border-4 border-background bg-secondary/10 flex items-center justify-center overflow-hidden shadow-sm">
@@ -130,9 +238,9 @@ const ProfileScreen = () => {
             </div>
             <button
               onClick={() => navigate("/edit-profile")}
-              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+              className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-105 transition-transform ${isHostMode ? "bg-indigo-600 text-white" : "bg-primary text-primary-foreground"}`}
             >
-              <Edit3 size={14} className="text-primary-foreground" />
+              <Edit3 size={14} />
             </button>
           </div>
 
@@ -248,23 +356,23 @@ const ProfileScreen = () => {
 
         <button
           onClick={() => navigate(`/user/${profile?.id}/places`)}
-          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-orange-100 shadow-sm active:scale-[0.98] transition-transform mb-2"
+          className={`w-full flex items-center gap-3 p-4 rounded-2xl shadow-sm active:scale-[0.98] transition-transform mb-2 ${isHostMode ? "bg-indigo-100" : "bg-orange-100"}`}
         >
-          <div className="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center">
-            <MapPin className="text-orange-600" size={18} />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isHostMode ? "bg-indigo-200" : "bg-orange-200"}`}>
+            <MapPin className={isHostMode ? "text-indigo-600" : "text-orange-600"} size={18} />
           </div>
-          <span className="text-sm font-bold text-orange-900 flex-1 text-left">My Places / Listings</span>
-          <ArrowRightIcon className="text-orange-600/70" size={18} />
+          <span className={`text-sm font-bold flex-1 text-left ${isHostMode ? "text-indigo-900" : "text-orange-900"}`}>My Places / Listings</span>
+          <ArrowRightIcon className={isHostMode ? "text-indigo-600/70" : "text-orange-600/70"} size={18} />
         </button>
 
         <button
-          onClick={() => navigate("/post-room")}
-          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-primary shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform mb-4"
+          onClick={() => isHostMode ? navigate("/post-room") : toggleHostMode()}
+          className={`w-full flex items-center gap-3 p-4 rounded-2xl shadow-lg active:scale-[0.98] transition-transform mb-4 text-white ${primaryButtonColors}`}
         >
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
             <StartIcon className="text-white" size={18} />
           </div>
-          <span className="text-sm font-bold text-white flex-1 text-left">Post a Room</span>
+          <span className="text-sm font-bold text-white flex-1 text-left">{isHostMode ? "Post a Room" : "Become a Host"}</span>
           <ArrowRightIcon className="text-white/70" size={18} />
         </button>
 

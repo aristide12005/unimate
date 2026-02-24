@@ -58,7 +58,6 @@ const AdminLayout = () => {
                         <NavItem path="/admin/user-reports" icon={AlertTriangle} label="Abuse Reports" />
                         <NavItem path="/admin/blocked-users" icon={Ban} label="Blocked Users" />
                         <NavItem path="/admin/meetings" icon={Users} label="Meetings & Agendas" />
-                        <NavItem path="/admin/contracts" icon={FileSignature} label="Contracts" />
                         <NavItem path="/admin/messages" icon={MessageSquare} label="Messages" />
                         <NavItem path="/admin/broadcasts" icon={Megaphone} label="Broadcasts" />
                         <NavItem path="/admin/listings" icon={Database} label="Listings" />

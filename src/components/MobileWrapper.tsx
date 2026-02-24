@@ -10,12 +10,18 @@ interface MobileWrapperProps {
     children: ReactNode;
 }
 
-// Routes that always use the centered mobile frame (auth + onboarding)
-const AUTH_PATHS = new Set([
-    "/", "/splash", "/login", "/auth-callback", "/check-email",
-    "/welcome", "/occupation", "/location", "/interests",
-    "/conditions", "/contact", "/username", "/photo", "/success",
-]);
+// Routes that have a dedicated Desktop experience
+const DESKTOP_PATHS = [
+    "/home",
+    "/listings"
+];
+
+const hasDesktopView = (pathname: string) => {
+    if (pathname.startsWith("/admin")) return true;
+    if (DESKTOP_PATHS.includes(pathname)) return true;
+    if (pathname.match(/^\/listings\/\d+$/)) return true; // /listings/:id
+    return false;
+};
 
 const MobileWrapper = ({ children }: MobileWrapperProps) => {
     const [showQR, setShowQR] = useState(false);
@@ -29,11 +35,8 @@ const MobileWrapper = ({ children }: MobileWrapperProps) => {
         return <>{children}</>;
     }
 
-    // Auth/onboarding routes: always centered mobile frame (no sidebar)
-    const isAuthRoute = AUTH_PATHS.has(location.pathname);
-
-    // Desktop (≥ 1024px) on a main app route: render the sidebar desktop layout
-    if (!isMobile && !isAuthRoute) {
+    // Desktop (≥ 1024px) on a route with a desktop view: render the sidebar desktop layout
+    if (!isMobile && hasDesktopView(location.pathname)) {
         return <DesktopLayout>{children}</DesktopLayout>;
     }
 

@@ -12,6 +12,8 @@ interface Profile {
   avatar_url?: string;
   phone?: string;
   is_whatsapp?: boolean;
+  host_mode_active?: boolean;
+  host_persona?: string | null;
 }
 
 interface AuthContextType {

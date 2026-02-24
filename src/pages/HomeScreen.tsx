@@ -69,7 +69,7 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
   });
 
   return (
-    <div className="pt-2 pb-12">
+    <div className="pt-2 pb-12 w-full">
       {/* ── Hero ── */}
       <div className="relative rounded-3xl overflow-hidden mb-10 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 px-10 py-12">
         <div className="relative z-10 max-w-xl">
@@ -286,7 +286,8 @@ const HomeScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24 font-sans selection:bg-primary/10">
+    <div className="min-h-screen bg-gray-50 pb-24 font-sans selection:bg-primary/10 w-full overflow-x-hidden">
+
       {/* ─── Video Hero Section ─── */}
       <div className="relative w-full overflow-hidden" style={{ height: "62vw", minHeight: 280, maxHeight: 420 }}>
         {/* Background video */}
@@ -314,9 +315,9 @@ const HomeScreen = () => {
               />
             </div>
             <div>
-              <p className="text-[10px] text-white/70 uppercase tracking-wider font-bold">Welcome back</p>
-              <h2 className="text-base font-bold text-white leading-none">
-                Hi {profile?.first_name || "there"} 👋
+              <p className="text-[10px] text-white/70 uppercase tracking-wider font-bold">Welcome {user ? 'back' : 'to uniMate'}</p>
+              <h2 className="text-base font-bold text-white leading-none truncate max-w-[200px]">
+                Hi {profile?.first_name || "Guest"} 👋
               </h2>
             </div>
           </div>

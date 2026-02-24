@@ -34,7 +34,6 @@ import ProfileScreen from "./pages/ProfileScreen";
 import EditProfileScreen from "./pages/EditProfileScreen";
 import PostListingScreen from "./pages/PostListingScreen";
 import HostListingWizard from "./pages/host/HostListingWizard";
-import ContractRequestScreen from "./pages/contract/ContractRequestScreen";
 import OAuthCallback from "./pages/OAuthCallback";
 import SettingsScreen from "./pages/SettingsScreen";
 import ChangePasswordScreen from "./pages/settings/ChangePasswordScreen";
@@ -46,7 +45,6 @@ import ReportsDashboard from "./pages/admin/ReportsDashboard";
 import EmployeeReports from "./pages/admin/EmployeeReports";
 import UserReports from "./pages/admin/UserReports";
 import BlockedUsers from "./pages/admin/BlockedUsers";
-import ContractsView from "./pages/admin/ContractsView";
 import BroadcastDashboard from "./pages/admin/BroadcastDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import TeamManagement from "./pages/admin/TeamManagement";
@@ -84,11 +82,11 @@ const App = () => (
                   <Route path="/contact" element={<ProtectedRoute redirectIfComplete><ContactScreen /></ProtectedRoute>} />
                   <Route path="/username" element={<ProtectedRoute redirectIfComplete><UsernameScreen /></ProtectedRoute>} />
                   <Route path="/success" element={<ProtectedRoute redirectIfComplete><SuccessScreen /></ProtectedRoute>} />
-                  <Route path="/home" element={<ProtectedRoute requireProfile><HomeScreen /></ProtectedRoute>} />
-                  <Route path="/listings" element={<ProtectedRoute requireProfile><ListingsScreen /></ProtectedRoute>} />
-                  <Route path="/listings/:id" element={<ProtectedRoute requireProfile><ListingDetailsScreen /></ProtectedRoute>} />
-                  <Route path="/user/:id" element={<ProtectedRoute requireProfile><UserProfileScreen /></ProtectedRoute>} />
-                  <Route path="/user/:id/places" element={<ProtectedRoute requireProfile><UserListingsScreen /></ProtectedRoute>} />
+                  <Route path="/home" element={<ProtectedRoute requireProfile allowGuest><HomeScreen /></ProtectedRoute>} />
+                  <Route path="/listings" element={<ProtectedRoute requireProfile allowGuest><ListingsScreen /></ProtectedRoute>} />
+                  <Route path="/listings/:id" element={<ProtectedRoute requireProfile allowGuest><ListingDetailsScreen /></ProtectedRoute>} />
+                  <Route path="/user/:id" element={<ProtectedRoute requireProfile allowGuest><UserProfileScreen /></ProtectedRoute>} />
+                  <Route path="/user/:id/places" element={<ProtectedRoute requireProfile allowGuest><UserListingsScreen /></ProtectedRoute>} />
                   <Route path="/chat/:id" element={<ProtectedRoute requireProfile><ChatScreen /></ProtectedRoute>} />
                   <Route path="/connect" element={<ProtectedRoute requireProfile><ConnectScreen /></ProtectedRoute>} />
                   <Route path="/notifications" element={<ProtectedRoute requireProfile><NotificationScreen /></ProtectedRoute>} />
@@ -98,7 +96,6 @@ const App = () => (
                   <Route path="/edit-profile" element={<ProtectedRoute requireProfile><EditProfileScreen /></ProtectedRoute>} />
                   <Route path="/post-room" element={<ProtectedRoute requireProfile><HostListingWizard /></ProtectedRoute>} />
                   <Route path="/host/wizard" element={<ProtectedRoute requireProfile><HostListingWizard /></ProtectedRoute>} />
-                  <Route path="/contract/:id" element={<ProtectedRoute requireProfile><ContractRequestScreen /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute requireProfile><SettingsScreen /></ProtectedRoute>} />
                   <Route path="/settings/change-password" element={<ProtectedRoute requireProfile><ChangePasswordScreen /></ProtectedRoute>} />
                   <Route path="/settings/help" element={<ProtectedRoute requireProfile><HelpCenterScreen /></ProtectedRoute>} />
@@ -119,7 +116,6 @@ const App = () => (
                     <Route path="user-reports" element={<UserReports />} />
                     <Route path="blocked-users" element={<BlockedUsers />} />
                     <Route path="meetings" element={<MeetingsManager />} />
-                    <Route path="contracts" element={<ContractsView />} />
                     <Route path="broadcasts" element={<BroadcastDashboard />} />
                     <Route path="messages" element={<AdminMessages />} />
                     <Route path="listings" element={<ListingManagement />} />

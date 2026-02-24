@@ -5,12 +5,14 @@ const ProtectedRoute = ({
   children,
   requireAdmin = false,
   requireProfile = false,
-  redirectIfComplete = false
+  redirectIfComplete = false,
+  allowGuest = false
 }: {
   children: React.ReactNode,
   requireAdmin?: boolean,
   requireProfile?: boolean,
-  redirectIfComplete?: boolean
+  redirectIfComplete?: boolean,
+  allowGuest?: boolean
 }) => {
   const { user, profile, loading } = useAuth();
 
@@ -22,7 +24,11 @@ const ProtectedRoute = ({
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user && !allowGuest) return <Navigate to="/login" replace />;
+
+  if (allowGuest && !user) {
+    return <>{children}</>;
+  }
 
   // 1. Check Admin Requirement
   if (requireAdmin) {

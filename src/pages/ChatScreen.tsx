@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { X, Image as ImageIcon, Camera, Send, Phone, Video, MoreVertical, Check, CheckCheck, Paperclip, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import JSConfetti from 'js-confetti';
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MOCK_LISTINGS, MOCK_CONVERSATIONS } from "@/data/mockData";
@@ -185,28 +186,23 @@ const ChatScreen = () => {
         };
     }, [senderProfile, receiver]);
 
-    const [contract, setContract] = useState<any>(null);
+    const handleMatchConfirmed = async () => {
+        const jsConfetti = new JSConfetti();
+        jsConfetti.addConfetti({
+            emojis: ['🏠', '🎉', '🌟', '🥂'],
+            confettiNumber: 60,
+        });
 
-    // Fetch Contracts between these two users
-    useEffect(() => {
-        if (!senderProfile || !receiver?.id) return;
+        toast.success("Match Confirmed! We've automatically archived any active listings.");
 
-        const fetchContract = async () => {
-            const { data } = await supabase
-                .from('contracts' as any)
-                .select('*, listing:listings(title, image)')
-                .or(`and(host_id.eq.${senderProfile.id},student_id.eq.${receiver.id}),and(host_id.eq.${receiver.id},student_id.eq.${senderProfile.id})`)
-                .eq('status', 'pending')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-
-            if (data) setContract(data);
-        };
-
-        fetchContract();
-        fetchContract();
-    }, [senderProfile, receiver]);
+        if (senderProfile) {
+            await supabase
+                .from('listings')
+                .update({ status: 'archived' })
+                .eq('author_id', senderProfile.id)
+                .eq('status', 'active');
+        }
+    };
 
     // Check if user is blocked
     useEffect(() => {
@@ -600,6 +596,12 @@ const ChatScreen = () => {
 
                 <div className="flex items-center gap-1 text-gray-400">
                     <button
+                        onClick={handleMatchConfirmed}
+                        className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-400 to-primary text-white text-xs font-bold rounded-full shadow-sm hover:shadow-md transition-all active:scale-95 mr-2"
+                    >
+                        <Check size={14} /> Match Confirmed
+                    </button>
+                    <button
                         onClick={() => handleCall('phone')}
                         className="p-2 hover:bg-orange-50 hover:text-primary rounded-full transition-colors"
                     >
@@ -638,32 +640,6 @@ const ChatScreen = () => {
 
             {/* ─── Chat Body (Content with Padding) ─── */}
             <div className="w-full pt-24 lg:pt-36 px-4">
-                {/* Contract Status Banner */}
-                {contract && contract.status === 'pending' && (
-                    <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center justify-between shadow-sm animate-in slide-in-from-top-4 duration-500">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            {contract.listing?.image && (
-                                <img
-                                    src={contract.listing.image}
-                                    alt="Property"
-                                    className="w-12 h-12 rounded-lg object-cover border border-orange-100 flex-shrink-0"
-                                />
-                            )}
-                            <div className="min-w-0">
-                                <h3 className="font-bold text-gray-900 text-sm truncate">
-                                    {contract.listing?.title || "Arrangement Request"}
-                                </h3>
-                                <p className="text-xs text-orange-600 font-medium">Pending Agreement</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => navigate(`/contract/${contract.id}`)}
-                            className="px-3 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-lg shadow-md shadow-orange-200 hover:bg-orange-600 active:scale-95 transition-all flex-shrink-0"
-                        >
-                            View
-                        </button>
-                    </div>
-                )}
 
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center opacity-60 space-y-3 animate-in fade-in duration-700">

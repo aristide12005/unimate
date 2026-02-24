@@ -34,25 +34,7 @@ interface ProfileData {
     languages: string[];
 }
 
-const INTERESTS_OPTIONS = [
-    { id: "sports", label: "Sports", emoji: "⚽", color: "bg-orange-100 text-orange-700 border-orange-200", selectedColor: "bg-orange-400 text-white border-orange-400" },
-    { id: "music", label: "Music", emoji: "🎵", color: "bg-pink-100 text-pink-700 border-pink-200", selectedColor: "bg-pink-400 text-white border-pink-400" },
-    { id: "reading", label: "Reading", emoji: "📚", color: "bg-amber-100 text-amber-700 border-amber-200", selectedColor: "bg-amber-400 text-white border-amber-400" },
-    { id: "movies", label: "Movies & TV", emoji: "🎬", color: "bg-purple-100 text-purple-700 border-purple-200", selectedColor: "bg-purple-400 text-white border-purple-400" },
-    { id: "travel", label: "Travel", emoji: "✈️", color: "bg-rose-100 text-rose-700 border-rose-200", selectedColor: "bg-rose-400 text-white border-rose-400" },
-    { id: "fitness", label: "Yoga & Fitness", emoji: "🧘", color: "bg-teal-100 text-teal-700 border-teal-200", selectedColor: "bg-teal-400 text-white border-teal-400" },
-    { id: "gadgets", label: "Gadgets", emoji: "🎮", color: "bg-violet-100 text-violet-700 border-violet-200", selectedColor: "bg-violet-400 text-white border-violet-400" },
-    { id: "pets", label: "Pets", emoji: "🐾", color: "bg-cyan-100 text-cyan-700 border-cyan-200", selectedColor: "bg-cyan-400 text-white border-cyan-400" },
-    { id: "volunteering", label: "Volunteering", emoji: "💚", color: "bg-green-100 text-green-700 border-green-200", selectedColor: "bg-green-400 text-white border-green-400" },
-    { id: "coffee", label: "Coffee Lover", emoji: "☕", color: "bg-orange-100 text-orange-700 border-orange-200", selectedColor: "bg-orange-400 text-white border-orange-400" },
-    { id: "outdoors", label: "Outdoors", emoji: "🌿", color: "bg-emerald-100 text-emerald-700 border-emerald-200", selectedColor: "bg-emerald-400 text-white border-emerald-400" },
-    { id: "languages", label: "Languages", emoji: "🌍", color: "bg-blue-100 text-blue-700 border-blue-200", selectedColor: "bg-blue-400 text-white border-blue-400" },
-    { id: "writing", label: "Writing", emoji: "✍️", color: "bg-rose-100 text-rose-700 border-rose-200", selectedColor: "bg-rose-400 text-white border-rose-400" },
-    { id: "cooking", label: "Cooking", emoji: "🍳", color: "bg-amber-100 text-amber-700 border-amber-200", selectedColor: "bg-amber-400 text-white border-amber-400" },
-    { id: "gaming", label: "Gaming", emoji: "🕹️", color: "bg-indigo-100 text-indigo-700 border-indigo-200", selectedColor: "bg-indigo-400 text-white border-indigo-400" },
-    { id: "art", label: "Art & Design", emoji: "🎨", color: "bg-pink-100 text-pink-700 border-pink-200", selectedColor: "bg-pink-400 text-white border-pink-400" },
-    { id: "photography", label: "Photography", emoji: "📸", color: "bg-slate-100 text-slate-700 border-slate-200", selectedColor: "bg-slate-400 text-white border-slate-400" },
-];
+// Interests options removed for Community-First Pivot
 
 const EditProfileScreen = () => {
     const navigate = useNavigate();
@@ -187,11 +169,8 @@ const EditProfileScreen = () => {
                 location_city: formData.location_city,
                 location_country: formData.location_country,
                 campus: formData.campus,
-                interests: formData.interests,
                 phone_number: formData.phone_number,
                 contact_type: formData.contact_type,
-                lifestyle: formData.lifestyle,
-                languages: formData.languages,
                 updated_at: new Date().toISOString()
             })
             .eq("user_id", user.id);
@@ -205,15 +184,6 @@ const EditProfileScreen = () => {
             toast.success("Profile updated successfully");
             navigate("/profile");
         }
-    };
-
-    const toggleInterest = (id: string) => {
-        setFormData(prev => {
-            const current = new Set(prev.interests);
-            if (current.has(id)) current.delete(id);
-            else current.add(id);
-            return { ...prev, interests: Array.from(current) };
-        });
     };
 
     if (loading) {
@@ -316,12 +286,12 @@ const EditProfileScreen = () => {
                             </div>
                         </div>
                         <div>
-                            <label className="text-xs font-semibold text-gray-500 mb-1 block">Bio</label>
+                            <label className="text-xs font-semibold text-gray-500 mb-1 block">Unified Bio <span className="text-primary">*</span></label>
                             <textarea
                                 value={formData.bio}
                                 onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                                className="w-full p-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all text-sm font-medium min-h-[80px] resize-none"
-                                placeholder="Tell us a bit about yourself..."
+                                className="w-full p-4 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all text-sm font-medium min-h-[140px] resize-none leading-relaxed"
+                                placeholder="Tell the community about yourself (e.g., 'Hello guys, I hope you are enjoying uniMate...')"
                             />
                         </div>
                     </div>
@@ -490,130 +460,7 @@ const EditProfileScreen = () => {
                         </div>
                     </div>
 
-                    {/* LIFESTYLE */}
-                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-                        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            Lifestyle & Habits
-                        </h2>
-
-                        {/* Smoking */}
-                        <div>
-                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Smoking Habits</label>
-                            <div className="flex gap-2">
-                                {['Non-smoker', 'Smoker', 'Outside only'].map(opt => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, smoke: opt } })}
-                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.smoke === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
-                                    >
-                                        {opt}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Pets */}
-                        <div>
-                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Pets</label>
-                            <div className="flex gap-2">
-                                {['No pets', 'Has pets', 'Likes pets'].map(opt => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, pets: opt } })}
-                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.pets === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
-                                    >
-                                        {opt}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Schedule */}
-                        <div>
-                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Daily Schedule</label>
-                            <div className="flex gap-2">
-                                {['Early Bird', 'Night Owl', 'Flexible'].map(opt => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, schedule: opt } })}
-                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.schedule === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
-                                    >
-                                        {opt}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Guests */}
-                        <div>
-                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Guests Frequency</label>
-                            <div className="flex gap-2">
-                                {['Never', 'Occasional', 'Frequent'].map(opt => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, guests: opt } })}
-                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.guests === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
-                                    >
-                                        {opt}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Cleanliness */}
-                        <div>
-                            <label className="text-xs font-semibold text-gray-500 mb-2 block">Cleanliness</label>
-                            <div className="flex gap-2">
-                                {['Messy', 'Average', 'Neat Freak'].map(opt => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => setFormData({ ...formData, lifestyle: { ...formData.lifestyle, cleanliness: opt } })}
-                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${formData.lifestyle.cleanliness === opt ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}
-                                    >
-                                        {opt}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* LANGUAGES */}
-                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-                        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Languages</h2>
-                        <input
-                            value={formData.languages.join(", ")}
-                            onChange={(e) => setFormData({ ...formData, languages: e.target.value.split(",").map(s => s.trim()) })}
-                            className="w-full p-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all text-sm font-bold"
-                            placeholder="English, French, Wolof..."
-                        />
-                        <p className="text-xs text-gray-400">Separate with commas</p>
-                    </div>
-
-                    {/* INTERESTS */}
-                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-                        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <GraduationCap size={16} /> Interests
-                        </h2>
-                        <div className="flex flex-wrap gap-2">
-                            {INTERESTS_OPTIONS.map((interest) => {
-                                const isSelected = formData.interests.includes(interest.id);
-                                return (
-                                    <button
-                                        key={interest.id}
-                                        onClick={() => toggleInterest(interest.id)}
-                                        className={`
-                                            flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold
-                                            border transition-all duration-200 active:scale-95
-                                            ${isSelected ? interest.selectedColor : "bg-gray-50 text-gray-600 border-gray-200"}
-                                        `}
-                                    >
-                                        <span>{interest.emoji}</span>
-                                        <span>{interest.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    {/* LIFESTYLE, LANGUAGES, and INTERESTS Sections removed as part of Community-First Pivot */}
 
                 </div>
             </div>

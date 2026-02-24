@@ -1,4 +1,4 @@
-import { Zap, Droplets, Wifi, Globe, Heart, Phone, Calendar } from "lucide-react";
+import { FileText, Phone, Calendar } from "lucide-react";
 import { ListingFormData, HousingRules } from "@/types/host";
 
 interface StepProps {
@@ -12,18 +12,6 @@ export default function Step2Arrangement({ data, update }: StepProps) {
     const updateRules = (updates: Partial<HousingRules>) => {
         update({ housing_rules: { ...rules, ...updates } });
     };
-
-    const toggleSpace = (type: "shared" | "private", space: string) => {
-        const list = type === "shared" ? rules.shared_spaces : rules.private_spaces;
-        const newList = list.includes(space)
-            ? list.filter((s) => s !== space)
-            : [...list, space];
-        if (type === "shared") updateRules({ shared_spaces: newList });
-        else updateRules({ private_spaces: newList });
-    };
-
-    const SHARED_SPACES = ["Kitchen", "Living Room", "Bathroom", "Balcony", "Garden", "Terrace", "Laundry"];
-    const PRIVATE_SPACES = ["Bedroom", "Bathroom", "Study Room", "Balcony"];
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
@@ -74,167 +62,32 @@ export default function Step2Arrangement({ data, update }: StepProps) {
 
             <hr className="border-gray-100" />
 
-            {/* Shared vs Private */}
+            {/* Terms and Conditions */}
             <div className="space-y-4">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                    <Heart size={18} className="text-rose-500" /> What's Shared vs. Private?
+                    <FileText size={18} className="text-primary" /> My Terms & Conditions
                 </h3>
 
-                <div className="space-y-3">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                        Shared with housemates
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                        {SHARED_SPACES.map((space) => (
-                            <button
-                                key={`shared-${space}`}
-                                type="button"
-                                onClick={() => toggleSpace("shared", space)}
-                                className={`px-3.5 py-2 rounded-full text-sm font-semibold transition-all border ${rules.shared_spaces.includes(space)
-                                        ? "bg-blue-100 text-blue-700 border-blue-200"
-                                        : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-                                    }`}
-                            >
-                                {space}
-                            </button>
-                        ))}
+                <div className="space-y-1.5 relative">
+                    <textarea
+                        value={rules.custom_terms || ""}
+                        onChange={(e) => updateRules({ custom_terms: e.target.value })}
+                        placeholder="I want a roommate where we share rent 50%...
+
+Here are my rules:
+- No loud music after 10 PM
+- We alternate cleaning the kitchen"
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white border-2 border-gray-100 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-gray-900 placeholder:text-gray-400 text-sm min-h-[200px] resize-y leading-relaxed"
+                    />
+                    <div className="absolute right-4 bottom-4 text-xs font-bold text-gray-400 bg-white/80 px-2 py-1 rounded backdrop-blur-sm">
+                        {rules.custom_terms?.length || 0} / 1000
                     </div>
                 </div>
-
-                <div className="space-y-3">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                        Your private spaces
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                        {PRIVATE_SPACES.map((space) => (
-                            <button
-                                key={`private-${space}`}
-                                type="button"
-                                onClick={() => toggleSpace("private", space)}
-                                className={`px-3.5 py-2 rounded-full text-sm font-semibold transition-all border ${rules.private_spaces.includes(space)
-                                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                                        : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-                                    }`}
-                            >
-                                {space}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <p className="text-xs text-gray-400 ml-1">
+                    Describe how rent, utilities, and chores are divided. Make it clear and friendly!
+                </p>
             </div>
 
-            <hr className="border-gray-100" />
-
-            {/* Utilities */}
-            <div className="space-y-4">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                    <Zap size={18} className="text-amber-500" /> Utilities — Who Pays?
-                </h3>
-
-                <div className="grid gap-3">
-                    {[
-                        {
-                            icon: <Zap size={18} />,
-                            bg: "bg-amber-50",
-                            color: "text-amber-600",
-                            label: "Electricity (SENELEC)",
-                            key: "electricity" as const,
-                            options: [
-                                { val: "included", label: "Included in rent" },
-                                { val: "split_percentage", label: "Split equally" },
-                                { val: "metered", label: "Pay per use (compteur)" },
-                            ],
-                        },
-                        {
-                            icon: <Droplets size={18} />,
-                            bg: "bg-blue-50",
-                            color: "text-blue-600",
-                            label: "Water (SDE)",
-                            key: "water" as const,
-                            options: [
-                                { val: "included", label: "Included in rent" },
-                                { val: "fixed_monthly", label: "Fixed amount/month" },
-                                { val: "split_percentage", label: "Split equally" },
-                            ],
-                        },
-                        {
-                            icon: <Wifi size={18} />,
-                            bg: "bg-indigo-50",
-                            color: "text-indigo-600",
-                            label: "WiFi / Internet",
-                            key: "wifi" as const,
-                            options: [
-                                { val: "included", label: "Included in rent" },
-                                { val: "split_percentage", label: "Split equally" },
-                                { val: "fixed_monthly", label: "Fixed amount/month" },
-                            ],
-                        },
-                    ].map(({ icon, bg, color, label, key, options }) => (
-                        <div
-                            key={key}
-                            className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm"
-                        >
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 ${bg} ${color} rounded-xl`}>{icon}</div>
-                                    <span className="font-semibold text-gray-700 text-sm">{label}</span>
-                                </div>
-                                <select
-                                    value={rules.utility_modes[key]}
-                                    onChange={(e) =>
-                                        updateRules({
-                                            utility_modes: {
-                                                ...rules.utility_modes,
-                                                [key]: e.target.value as any,
-                                            },
-                                        })
-                                    }
-                                    className="text-xs font-bold border border-gray-100 bg-gray-50 rounded-xl px-3 py-2 text-gray-700 focus:outline-none focus:border-primary max-w-[140px]"
-                                >
-                                    {options.map((o) => (
-                                        <option key={o.val} value={o.val}>
-                                            {o.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <hr className="border-gray-100" />
-
-            {/* Languages */}
-            <div className="space-y-4">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                    <Globe size={18} className="text-purple-500" /> Languages Spoken
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                    {["Wolof", "French", "English", "Arabic", "Pulaar", "Sérère"].map((lang) => (
-                        <button
-                            key={lang}
-                            type="button"
-                            onClick={() => {
-                                const langs = rules.host_preferences.languages;
-                                const newLangs = langs.includes(lang)
-                                    ? langs.filter((l) => l !== lang)
-                                    : [...langs, lang];
-                                updateRules({
-                                    host_preferences: { ...rules.host_preferences, languages: newLangs },
-                                });
-                            }}
-                            className={`px-3.5 py-2 rounded-xl text-sm font-bold border transition-all ${rules.host_preferences.languages.includes(lang)
-                                    ? "bg-purple-100 text-purple-700 border-purple-200"
-                                    : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-                                }`}
-                        >
-                            {lang}
-                        </button>
-                    ))}
-                </div>
-                <p className="text-xs text-gray-400">Wolof is the most spoken language in Dakar</p>
-            </div>
         </div>
     );
 }
