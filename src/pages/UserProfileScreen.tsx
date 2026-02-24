@@ -1,14 +1,26 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MoreHorizontal, MessageCircle, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, MessageCircle, ChevronRight, CheckCircle2, Ban, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import ReportUserDialog from "@/components/ReportUserDialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const UserProfileScreen = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+    const [isBlocking, setIsBlocking] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -24,7 +36,7 @@ const UserProfileScreen = () => {
                 .single();
 
             if (error || !data) {
-                console.log("Profile not found by id, trying user_id...");
+                // Try/Fall back just in case the id passed is user_id not profile_id
                 const retry = await supabase
                     .from("profiles")
                     .select("*")
@@ -63,6 +75,42 @@ const UserProfileScreen = () => {
     if (loading) return <div className="p-8">Loading...</div>;
     if (!profile) return <div className="p-8">User not found</div>;
 
+    const handleBlockUser = async () => {
+        if (!user || !profile) return;
+        if (!confirm("Are you sure you want to block this user? You will not see their messages or listings.")) return;
+
+        setIsBlocking(true);
+        try {
+            const { data: blockerProfile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('user_id', user.id)
+                .single();
+
+            if (!blockerProfile) throw new Error("Profile not found");
+
+            const { error } = await supabase.from('blocked_users').insert({
+                blocker_id: blockerProfile.id,
+                blocked_id: profile.id
+            });
+
+            if (error) {
+                if (error.code === '23505') {
+                    toast.error("You have already blocked this user.");
+                    return;
+                }
+                throw error;
+            }
+            toast.success(`${profile.name} has been blocked.`);
+            navigate(-1); // Go back after blocking
+        } catch (error) {
+            console.error("Block failed:", error);
+            toast.error("Failed to block user");
+        } finally {
+            setIsBlocking(false);
+        }
+    };
+
     const author = profile;
 
     return (
@@ -84,9 +132,23 @@ const UserProfileScreen = () => {
                         <ArrowLeft size={24} />
                     </button>
                     <span className="text-white font-bold text-lg drop-shadow-md shadow-black/50">{author.name}</span>
-                    <button className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-colors">
-                        <MoreHorizontal size={24} />
-                    </button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-colors">
+                                <MoreHorizontal size={24} />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={() => setIsReportDialogOpen(true)}>
+                                <Flag className="h-4 w-4 mr-2" />
+                                Report User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleBlockUser} disabled={isBlocking}>
+                                <Ban className="h-4 w-4 mr-2" />
+                                Block User
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
@@ -122,12 +184,67 @@ const UserProfileScreen = () => {
                     <p className="text-lg font-bold text-gray-900">{author.location}</p>
                 </div>
 
-                {/* Bio (Optional, using description-like text for now if not valid) */}
+                {/* Bio */}
                 {author.bio && (
                     <div className="mt-4">
                         <p className="text-gray-600 leading-relaxed">
                             {author.bio}
                         </p>
+                    </div>
+                )}
+
+                {/* Additional Details Grid */}
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                    {author.school_company && (
+                        <div className="bg-white p-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Occupation</p>
+                            <p className="font-semibold text-gray-800 text-sm line-clamp-2">{author.school_company}</p>
+                        </div>
+                    )}
+                    {author.lifestyle && (
+                        <div className="bg-white p-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Lifestyle</p>
+                            <p className="font-semibold text-gray-800 text-sm">{author.lifestyle}</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Interests & Languages */}
+                {(author.interests || author.languages) && (
+                    <div className="mt-6 space-y-4">
+                        {author.interests && (
+                            <div>
+                                <p className="text-sm font-bold text-gray-900 mb-2">Interests</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {Array.isArray(author.interests) ? author.interests.map((interest: string, i: number) => (
+                                        <span key={i} className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600">
+                                            {interest}
+                                        </span>
+                                    )) : (
+                                        <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600">
+                                            {author.interests}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {author.languages && (
+                            <div>
+                                <p className="text-sm font-bold text-gray-900 mb-2">Languages</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {Array.isArray(author.languages) ? author.languages.map((lang: string, i: number) => (
+                                        <span key={i} className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-xs font-medium">
+                                            {lang}
+                                        </span>
+                                    )) : (
+                                        <span className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-xs font-medium">
+                                            {author.languages}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -145,14 +262,34 @@ const UserProfileScreen = () => {
             {/* ─── Bottom Action Bar ─── */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 pb-8 safe-area-bottom z-40 flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 <span className="text-xl font-bold text-gray-900">{author.name}</span>
-                <button
-                    onClick={() => navigate(`/chat/${author.id}`)}
-                    className="bg-primary text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors active:scale-95"
-                >
-                    <MessageCircle size={20} fill="currentColor" />
-                    Message
-                </button>
+                {profile && profile.id === id ? (
+                    <button
+                        disabled
+                        className="bg-gray-200 text-gray-400 px-8 py-3 rounded-full font-bold flex items-center gap-2 cursor-not-allowed"
+                    >
+                        <MessageCircle size={20} fill="currentColor" />
+                        Message
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => navigate(`/chat/${author.id}`)}
+                        className="bg-primary text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors active:scale-95"
+                    >
+                        <MessageCircle size={20} fill="currentColor" />
+                        Message
+                    </button>
+                )}
             </div>
+
+            {/* Report Dialog */}
+            {profile && (
+                <ReportUserDialog
+                    isOpen={isReportDialogOpen}
+                    onClose={() => setIsReportDialogOpen(false)}
+                    reportedUserId={profile.id}
+                    reportedUserName={profile.name}
+                />
+            )}
         </div>
     );
 };

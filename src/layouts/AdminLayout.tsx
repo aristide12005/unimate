@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
-import { Users, LayoutDashboard, Database, LogOut, Menu, X, Briefcase, MessageSquare, FileText } from "lucide-react";
+import { Users, LayoutDashboard, Database, LogOut, Menu, X, Briefcase, MessageSquare, FileText, AlertTriangle, Ban, FileSignature, Megaphone } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -53,8 +53,14 @@ const AdminLayout = () => {
                         <NavItem path="/admin" icon={LayoutDashboard} label="Dashboard" />
                         <NavItem path="/admin/users" icon={Users} label="Users" />
                         <NavItem path="/admin/team" icon={Briefcase} label="Team" />
-                        <NavItem path="/admin/reports" icon={FileText} label="Reports" />
+                        <NavItem path="/admin/dar" icon={FileText} label="Daily Activity (DAR)" />
+                        <NavItem path="/admin/reports" icon={FileText} label="System Reports" />
+                        <NavItem path="/admin/user-reports" icon={AlertTriangle} label="Abuse Reports" />
+                        <NavItem path="/admin/blocked-users" icon={Ban} label="Blocked Users" />
+                        <NavItem path="/admin/meetings" icon={Users} label="Meetings & Agendas" />
+                        <NavItem path="/admin/contracts" icon={FileSignature} label="Contracts" />
                         <NavItem path="/admin/messages" icon={MessageSquare} label="Messages" />
+                        <NavItem path="/admin/broadcasts" icon={Megaphone} label="Broadcasts" />
                         <NavItem path="/admin/listings" icon={Database} label="Listings" />
                     </nav>
 

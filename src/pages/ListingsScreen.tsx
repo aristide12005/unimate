@@ -103,10 +103,10 @@ const ListingsScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20 font-sans flex flex-col">
+        <div className="min-h-screen bg-gray-50 pb-20 lg:pb-6 font-sans flex flex-col">
             {/* ─── Header & Search Widget ─── */}
-            <div className="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
-                <div className="px-4 pt-12 pb-2">
+            <div className="bg-white shadow-sm sticky top-0 lg:top-16 z-40 transition-all duration-300">
+                <div className="px-4 pt-12 lg:pt-4 pb-2">
                     {/* Top Row: Back | Search | Favorites */}
                     <div className="flex items-center gap-2 mb-4">
                         <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">

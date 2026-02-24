@@ -12,6 +12,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Trash2, Edit2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import ReportUserDialog from "@/components/ReportUserDialog";
 
 const ChatScreen = () => {
     const { id } = useParams();
@@ -24,6 +27,11 @@ const ChatScreen = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [editingMessage, setEditingMessage] = useState<any>(null);
+    const [editContent, setEditContent] = useState("");
+    const [isReportOpen, setIsReportOpen] = useState(false);
+    const [isBlockAlertOpen, setIsBlockAlertOpen] = useState(false);
+    const [isBlocked, setIsBlocked] = useState(false);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,7 +83,7 @@ const ChatScreen = () => {
                         name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.username,
                         avatar: data.avatar_url || "https://github.com/shadcn.png",
                         status: "Active now",
-                        phone: "1234567890" // Placeholder
+                        phone: data.phone || ""
                     });
                 }
                 setLoading(false);
@@ -104,7 +112,9 @@ const ChatScreen = () => {
                     createdAt: m.created_at,
                     isRead: m.is_read,
                     attachmentUrl: m.attachment_url,
-                    attachmentType: m.attachment_type
+                    attachmentType: m.attachment_type,
+                    isEdited: m.is_edited,
+                    isDeleted: m.is_deleted
                 }));
                 setMessages(loadedMessages);
 
@@ -143,16 +153,28 @@ const ChatScreen = () => {
                             createdAt: payload.new.created_at,
                             isRead: payload.new.is_read,
                             attachmentUrl: payload.new.attachment_url,
-                            attachmentType: payload.new.attachment_type
+                            attachmentType: payload.new.attachment_type,
+                            isEdited: payload.new.is_edited,
+                            isDeleted: payload.new.is_deleted
                         };
-                        setMessages(prev => [...prev, newMsg]);
+                        setMessages(prev => {
+                            // Dedup logic just in case
+                            if (prev.some(m => m.id === newMsg.id)) return prev;
+                            return [...prev, newMsg];
+                        });
 
                         // If I am the receiver, mark as read immediately
                         if (newMsg.receiverId === senderProfile.id) {
                             supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id);
                         }
                     } else if (payload.eventType === 'UPDATE') {
-                        setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, isRead: payload.new.is_read } : m));
+                        setMessages(prev => prev.map(m => m.id === payload.new.id ? {
+                            ...m,
+                            text: payload.new.content,
+                            isRead: payload.new.is_read,
+                            isEdited: payload.new.is_edited,
+                            isDeleted: payload.new.is_deleted
+                        } : m));
                     }
                 }
             )
@@ -183,7 +205,68 @@ const ChatScreen = () => {
         };
 
         fetchContract();
+        fetchContract();
     }, [senderProfile, receiver]);
+
+    // Check if user is blocked
+    useEffect(() => {
+        if (!senderProfile || !receiver?.id) return;
+
+        const checkBlockStatus = async () => {
+            const { data } = await supabase
+                .from('blocked_users')
+                .select('*')
+                .eq('blocker_id', senderProfile.id)
+                .eq('blocked_id', receiver.id)
+                .single();
+
+            if (data) setIsBlocked(true);
+        };
+
+        checkBlockStatus();
+    }, [senderProfile, receiver]);
+
+    const handleBlockUser = async () => {
+        if (!senderProfile || !receiver?.id) return;
+
+        try {
+            const { error } = await supabase
+                .from('blocked_users')
+                .insert({
+                    blocker_id: senderProfile.id,
+                    blocked_id: receiver.id
+                });
+
+            if (error) throw error;
+
+            setIsBlocked(true);
+            toast.success("User blocked");
+            setIsBlockAlertOpen(false);
+        } catch (error) {
+            console.error("Block failed:", error);
+            toast.error("Failed to block user");
+        }
+    };
+
+    const handleUnblockUser = async () => {
+        if (!senderProfile || !receiver?.id) return;
+
+        try {
+            const { error } = await supabase
+                .from('blocked_users')
+                .delete()
+                .eq('blocker_id', senderProfile.id)
+                .eq('blocked_id', receiver.id);
+
+            if (error) throw error;
+
+            setIsBlocked(false);
+            toast.success("User unblocked");
+        } catch (error) {
+            console.error("Unblock failed:", error);
+            toast.error("Failed to unblock user");
+        }
+    };
 
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,17 +400,73 @@ const ChatScreen = () => {
         }
     };
 
+    const handleDeleteMessage = async (msgId: any) => {
+        // Optimistic update
+        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isDeleted: true } : m));
+
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_deleted: true })
+            .eq('id', msgId);
+
+        if (error) {
+            toast.error("Failed to delete message");
+            // Revert logic could be complex without full reload, but it's fine for now
+        }
+    };
+
+    const handleEditMessage = (msg: any) => {
+        setEditingMessage(msg);
+        setEditContent(msg.text);
+    };
+
+    const submitEditMessage = async () => {
+        if (!editingMessage) return;
+
+        const oldContent = editingMessage.text;
+        // Optimistic
+        setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, text: editContent, isEdited: true } : m));
+        setEditingMessage(null);
+
+        const { error } = await supabase
+            .from('messages')
+            .update({ content: editContent, is_edited: true })
+            .eq('id', editingMessage.id);
+
+        if (error) {
+            toast.error("Failed to edit message");
+            // Revert
+            setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, text: oldContent, isEdited: false } : m));
+        }
+    };
+
     const handleCall = (type: 'phone' | 'video') => {
         if (!receiver) return;
-        const phoneNumber = "1234567890"; // Placeholder
+
+        const phoneNumber = receiver.phone;
+
+        if (!phoneNumber) {
+            toast.error("Phone number not available for this user");
+            return;
+        }
+
         if (type === 'phone') {
             window.location.href = `tel:${phoneNumber}`;
         } else {
+            // Assuming video call integration or just WhatsApp for now
             window.open(`https://wa.me/${phoneNumber}?text=Hey`, '_blank');
         }
     };
 
     const renderMessageContent = (msg: any) => {
+        if (msg.isDeleted) {
+            return (
+                <p className="italic text-sm opacity-70 flex items-center gap-2">
+                    <Trash2 size={12} /> This message was deleted
+                </p>
+            );
+        }
+
         if (msg.attachmentUrl) {
             if (msg.attachmentType === 'image') {
                 return (
@@ -371,7 +510,12 @@ const ChatScreen = () => {
                 );
             }
         }
-        return <p>{msg.text}</p>;
+        return (
+            <div>
+                <p>{msg.text}</p>
+                {msg.isEdited && <span className="text-[10px] opacity-60 italic block text-right mt-1">Edited</span>}
+            </div>
+        );
     };
 
     // ─── SKELETON LOADER ───
@@ -379,7 +523,7 @@ const ChatScreen = () => {
         return (
             <div className="min-h-screen w-full bg-gradient-to-br from-[#FFF8F6] to-[#FFF0EC] flex flex-col pb-24 font-sans">
                 {/* Header Skeleton */}
-                <div className="fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between bg-white/90 backdrop-blur-xl border-b border-orange-100/50">
+                <div className="fixed top-0 lg:top-16 left-0 right-0 z-40 px-4 py-3 flex items-center justify-between bg-white/90 backdrop-blur-xl border-b border-orange-100/50">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
                         <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
@@ -428,7 +572,7 @@ const ChatScreen = () => {
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-[#FFF8F6] to-[#FFF0EC] font-sans pb-24">
             {/* ─── Premium Header (Fixed Block) ─── */}
-            <div className="fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between 
+            <div className="fixed top-0 lg:top-16 left-0 right-0 z-40 px-4 py-3 flex items-center justify-between 
                 bg-white/90 backdrop-blur-xl border-b border-orange-100/50 shadow-sm transition-all duration-300">
 
                 <div className="flex items-center gap-3">
@@ -475,19 +619,25 @@ const ChatScreen = () => {
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 border-orange-100">
-                            <DropdownMenuItem onClick={() => toast.info("Report feature coming soon")}>
+                            <DropdownMenuItem onClick={() => setIsReportOpen(true)}>
                                 Report User
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast.info("Block feature coming soon")} className="text-red-600">
-                                Block User
-                            </DropdownMenuItem>
+                            {isBlocked ? (
+                                <DropdownMenuItem onClick={handleUnblockUser}>
+                                    Unblock User
+                                </DropdownMenuItem>
+                            ) : (
+                                <DropdownMenuItem onClick={() => setIsBlockAlertOpen(true)} className="text-red-600">
+                                    Block User
+                                </DropdownMenuItem>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             </div>
 
             {/* ─── Chat Body (Content with Padding) ─── */}
-            <div className="w-full pt-24 px-4">
+            <div className="w-full pt-24 lg:pt-36 px-4">
                 {/* Contract Status Banner */}
                 {contract && contract.status === 'pending' && (
                     <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center justify-between shadow-sm animate-in slide-in-from-top-4 duration-500">
@@ -537,27 +687,42 @@ const ChatScreen = () => {
                                     isGrouped ? 'mt-1' : 'mt-4'
                                 )}
                             >
-                                <div className={cn(
-                                    "max-w-[75%] px-4 py-3 shadow-sm relative text-[15px] leading-relaxed",
-                                    isMe
-                                        ? "bg-gradient-to-br from-primary to-orange-600 text-white rounded-2xl rounded-tr-none shadow-orange-200"
-                                        : "bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-tl-none",
-                                )}>
-                                    {renderMessageContent(msg)}
-                                    <div className={cn(
-                                        "text-[10px] mt-1 flex items-center gap-1 opacity-80 float-right ml-2 font-medium",
-                                        isMe ? "text-orange-50" : "text-gray-400"
-                                    )}>
-                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        {isMe && (
-                                            msg.isRead ? (
-                                                <CheckCheck size={14} className="text-white" />
-                                            ) : (
-                                                <Check size={14} />
-                                            )
-                                        )}
-                                    </div>
-                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <div className={cn(
+                                            "max-w-[75%] px-4 py-3 shadow-sm relative text-[15px] leading-relaxed cursor-pointer transition-transform active:scale-95",
+                                            isMe
+                                                ? "bg-gradient-to-br from-primary to-orange-600 text-white rounded-2xl rounded-tr-none shadow-orange-200"
+                                                : "bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-tl-none",
+                                        )}>
+                                            {renderMessageContent(msg)}
+                                            <div className={cn(
+                                                "text-[10px] mt-1 flex items-center gap-1 opacity-80 float-right ml-2 font-medium",
+                                                isMe ? "text-orange-50" : "text-gray-400"
+                                            )}>
+                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {isMe && (
+                                                    msg.isRead ? (
+                                                        <CheckCheck size={14} className="text-white" />
+                                                    ) : (
+                                                        <Check size={14} />
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    </DropdownMenuTrigger>
+
+                                    {isMe && !msg.isDeleted && (
+                                        <DropdownMenuContent align={isMe ? "end" : "start"}>
+                                            <DropdownMenuItem onClick={() => handleEditMessage(msg)}>
+                                                <Edit2 size={14} className="mr-2" /> Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDeleteMessage(msg.id)} className="text-red-600">
+                                                <Trash2 size={14} className="mr-2" /> Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    )}
+                                </DropdownMenu>
                             </div>
                         );
                     })
@@ -601,16 +766,16 @@ const ChatScreen = () => {
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder={isUploading ? "Uploading file..." : "Type a message..."}
-                            disabled={isUploading}
+                            placeholder={isUploading ? "Uploading file..." : isBlocked ? "You have blocked this user" : "Type a message..."}
+                            disabled={isUploading || isBlocked}
                             className="w-full bg-gray-100/50 border border-transparent focus:bg-white focus:border-primary/20 
                                 rounded-full px-6 py-3 pl-5 outline-none text-gray-900 placeholder:text-gray-400 
-                                transition-all duration-300 shadow-inner focus:shadow-lg focus:shadow-primary/5 disabled:bg-gray-100"
+                                transition-all duration-300 shadow-inner focus:shadow-lg focus:shadow-primary/5 disabled:bg-gray-100 disabled:text-gray-500"
                         />
                     </div>
 
                     <button
-                        disabled={!message.trim() || isUploading}
+                        disabled={!message.trim() || isUploading || isBlocked}
                         onClick={handleSendMessage}
                         className="p-3 rounded-full bg-primary text-white shadow-lg shadow-primary/30 
                             disabled:opacity-50 disabled:shadow-none disabled:bg-gray-200 disabled:text-gray-400
@@ -620,6 +785,54 @@ const ChatScreen = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Edit Dialog */}
+            <AlertDialog open={!!editingMessage} onOpenChange={(open) => !open && setEditingMessage(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Edit Message</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <div className="py-4">
+                        <input
+                            type="text"
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            className="w-full p-2 border rounded-md"
+                            autoFocus
+                        />
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setEditingMessage(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={submitEditMessage}>Save</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Block Confirmation Dialog */}
+            <AlertDialog open={isBlockAlertOpen} onOpenChange={setIsBlockAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Block User</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to block this user? They will not be able to message you.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleBlockUser} className="bg-red-600 hover:bg-red-700">Block</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Report Dialog */}
+            {receiver && (
+                <ReportUserDialog
+                    isOpen={isReportOpen}
+                    onClose={() => setIsReportOpen(false)}
+                    reportedUserId={receiver.id}
+                    reportedUserName={receiver.name}
+                />
+            )}
         </div>
     );
 };

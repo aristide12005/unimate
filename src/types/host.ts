@@ -24,12 +24,15 @@ export interface ListingFormData {
     description: string;
     features: string[];
     image_url: string;
+    images: { url: string; category: string }[];
     housing_rules: HousingRules;
+    contact_phone: string;
+    available_from: string;
 }
 
 export const INITIAL_HOUSING_RULES: HousingRules = {
-    shared_spaces: ['kitchen', 'living_room'],
-    private_spaces: ['bedroom'],
+    shared_spaces: ['Kitchen', 'Living Room'],
+    private_spaces: ['Bedroom'],
     utility_modes: {
         electricity: 'split_percentage',
         water: 'fixed_monthly',

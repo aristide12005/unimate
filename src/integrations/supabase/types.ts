@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      channels: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       listings: {
         Row: {
           author_id: string
@@ -57,6 +89,44 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      meetings: {
+        Row: {
+          id: string
+          title: string
+          date: string
+          agenda: Json | null
+          action_items: Json | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          date: string
+          agenda?: Json | null
+          action_items?: Json | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          date?: string
+          agenda?: Json | null
+          action_items?: Json | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
         ]
       }
       messages: {
@@ -110,6 +180,8 @@ export type Database = {
           birthday: string | null
           campus: string | null
           created_at: string
+          department: string | null
+          job_title: string | null
           first_name: string | null
           gender: string | null
           housing_status: string | null
@@ -123,9 +195,11 @@ export type Database = {
           onboarding_complete: boolean | null
           role: Database["public"]["Enums"]["app_role"]
           school_company: string | null
+          supervisor_id: string | null
           updated_at: string
           user_id: string | null
           username: string | null
+          work_status: string | null
         }
         Insert: {
           age?: number | null
@@ -135,6 +209,8 @@ export type Database = {
           birthday?: string | null
           campus?: string | null
           created_at?: string
+          department?: string | null
+          job_title?: string | null
           first_name?: string | null
           gender?: string | null
           housing_status?: string | null
@@ -148,9 +224,11 @@ export type Database = {
           onboarding_complete?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           school_company?: string | null
+          supervisor_id?: string | null
           updated_at?: string
           user_id?: string | null
           username?: string | null
+          work_status?: string | null
         }
         Update: {
           age?: number | null
@@ -160,6 +238,8 @@ export type Database = {
           birthday?: string | null
           campus?: string | null
           created_at?: string
+          department?: string | null
+          job_title?: string | null
           first_name?: string | null
           gender?: string | null
           housing_status?: string | null
@@ -173,11 +253,54 @@ export type Database = {
           onboarding_complete?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           school_company?: string | null
+          supervisor_id?: string | null
           updated_at?: string
           user_id?: string | null
           username?: string | null
+          work_status?: string | null
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          id: string
+          employee_id: string
+          date: string
+          done_today: string
+          planned_tomorrow: string
+          blockers: string | null
+          sentiment: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          date?: string
+          done_today: string
+          planned_tomorrow: string
+          blockers?: string | null
+          sentiment?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          date?: string
+          done_today?: string
+          planned_tomorrow?: string
+          blockers?: string | null
+          sentiment?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

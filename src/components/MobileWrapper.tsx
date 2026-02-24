@@ -3,31 +3,49 @@ import { QRCodeSVG } from "qrcode.react";
 import { Smartphone, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import IOSInstallPrompt from "./IOSInstallPrompt";
+import DesktopLayout from "./DesktopLayout";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface MobileWrapperProps {
     children: ReactNode;
 }
 
+// Routes that always use the centered mobile frame (auth + onboarding)
+const AUTH_PATHS = new Set([
+    "/", "/splash", "/login", "/auth-callback", "/check-email",
+    "/welcome", "/occupation", "/location", "/interests",
+    "/conditions", "/contact", "/username", "/photo", "/success",
+]);
+
 const MobileWrapper = ({ children }: MobileWrapperProps) => {
     const [showQR, setShowQR] = useState(false);
     const location = useLocation();
+    const isMobile = useIsMobile();
 
-    // Use the specific network IP provided by the user for the QR code
     const currentUrl = window.location.href;
 
-    // If on admin routes, render children directly (Desktop View)
+    // Admin routes always get the full-screen desktop view
     if (location.pathname.startsWith("/admin")) {
         return <>{children}</>;
     }
 
+    // Auth/onboarding routes: always centered mobile frame (no sidebar)
+    const isAuthRoute = AUTH_PATHS.has(location.pathname);
+
+    // Desktop (≥ 1024px) on a main app route: render the sidebar desktop layout
+    if (!isMobile && !isAuthRoute) {
+        return <DesktopLayout>{children}</DesktopLayout>;
+    }
+
+    // Mobile (< 1024px): original phone-frame layout
     return (
         <div className="min-h-screen bg-gray-100 flex justify-center">
-            {/* Mobile Frame - safe-top ensures content respects notch/status bar */}
-            <div className="w-full max-w-[430px] min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col safe-top">
+            {/* Mobile Frame */}
+            <div className="w-full max-w-[430px] min-h-screen bg-white shadow-2xl relative flex flex-col safe-top overflow-x-hidden">
                 {children}
             </div>
 
-            {/* Desktop Only: QR Code Button */}
+            {/* Desktop Only: QR Code Button (only shown if JS detects resize back to mobile) */}
             <div className="hidden md:flex flex-col items-center fixed right-8 top-1/2 -translate-y-1/2 gap-4">
                 <button
                     onClick={() => setShowQR(true)}
@@ -64,9 +82,6 @@ const MobileWrapper = ({ children }: MobileWrapperProps) => {
                                     level="H"
                                     includeMargin={true}
                                 />
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    {/* Optional center logo if needed */}
-                                </div>
                             </div>
 
                             <div className="mt-6 bg-yellow-50 text-yellow-800 text-xs p-3 rounded-lg text-left">
@@ -76,7 +91,8 @@ const MobileWrapper = ({ children }: MobileWrapperProps) => {
                     </div>
                 </div>
             )}
-            {/* iOS Install Prompt (Visible only on iOS mobile) */}
+
+            {/* iOS Install Prompt (Mobile only) */}
             <div className="md:hidden">
                 <IOSInstallPrompt />
             </div>

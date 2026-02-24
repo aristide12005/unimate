@@ -67,7 +67,7 @@ const ProfileScreen = () => {
   // ─── SKELETON LOADER ───
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col pb-24">
+      <div className="min-h-screen bg-background flex flex-col pb-24 lg:pb-6">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between px-5 pt-4">
           <Skeleton className="w-24 h-8" />
@@ -105,11 +105,14 @@ const ProfileScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-24">
+    <div className="min-h-screen bg-background flex flex-col pb-24 lg:pb-6">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4">
         <h1 className="text-2xl font-black text-foreground">Profile</h1>
-        <button className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+        <button
+          onClick={() => navigate("/settings")}
+          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
+        >
           <Settings size={18} className="text-foreground" />
         </button>
       </div>

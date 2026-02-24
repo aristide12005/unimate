@@ -14,6 +14,7 @@ const UsernameScreen = () => {
   const [year, setYear] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -65,24 +66,33 @@ const UsernameScreen = () => {
   const birthdayValid = month.length >= 1 && day.length >= 1 && year.length === 4;
 
   const handleContinue = async () => {
-    if (!user || !available) return;
+    if (!user || !available || !birthdayValid) return;
     const birthday = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
+    setSaving(true);
     try {
-      let currentAvatarUrl = null;
+      let currentAvatarUrl: string | null = null;
       if (avatarFile) {
-        const filePath = `${user.id}/avatar-${Date.now()}.${avatarFile.name.split('.').pop()}`;
-        const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, avatarFile, { upsert: true });
-        if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
+        const ext = avatarFile.name.split('.').pop();
+        const filePath = `${user.id}/avatar-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, avatarFile, { upsert: true });
+        if (uploadError) {
+          toast.error("Photo upload failed — continuing without it");
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(filePath);
           currentAvatarUrl = publicUrl;
         }
       }
 
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         username,
         birthday,
-        updated_at: new Date().toISOString()
+        onboarding_complete: true,
+        updated_at: new Date().toISOString(),
       };
 
       if (currentAvatarUrl) {
@@ -95,10 +105,14 @@ const UsernameScreen = () => {
         .eq("user_id", user.id);
 
       if (error) throw error;
-      navigate("/photo");
+
+      // Go directly to success — no separate photo step needed
+      navigate("/success");
 
     } catch (error: any) {
       toast.error(error.message || "Failed to save profile");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -246,10 +260,13 @@ const UsernameScreen = () => {
       <div className="w-full max-w-sm pt-4">
         <button
           onClick={handleContinue}
-          disabled={!username || !available || !birthdayValid}
-          className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
+          disabled={!username || !available || !birthdayValid || saving}
+          className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none flex items-center justify-center gap-2"
         >
-          Finish Setup
+          {saving && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          )}
+          {saving ? "Saving..." : "Finish Setup"}
         </button>
       </div>
     </div>

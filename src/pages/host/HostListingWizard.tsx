@@ -11,10 +11,10 @@ import Step3Vibe from "@/components/host/Step3Vibe";
 import Step4Preview from "@/components/host/Step4Preview";
 
 const STEPS = [
-    { id: 1, title: "The Basics" },
-    { id: 2, title: "The Arrangement" },
-    { id: 3, title: "The Vibe" },
-    { id: 4, title: "Review" }
+    { id: 1, title: "The Basics", subtitle: "Tell us about your place", description: "Start with the essentials — what kind of space is it, where is it, and how much does it cost?" },
+    { id: 2, title: "Arrangement", subtitle: "Set the house rules", description: "Share the details about utilities, shared spaces, and what tenants should expect." },
+    { id: 3, title: "Amenities & Photos", subtitle: "Make it stand out", description: "Highlight what makes your space special and add photos to attract the right tenants." },
+    { id: 4, title: "Review", subtitle: "Check everything", description: "Take a final look at your listing before publishing it to students across Dakar." }
 ];
 
 export default function HostListingWizard() {
@@ -30,8 +30,11 @@ export default function HostListingWizard() {
         location: "",
         description: "",
         features: [],
-        image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267", // Default placeholder
-        housing_rules: INITIAL_HOUSING_RULES
+        image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
+        images: [],
+        housing_rules: INITIAL_HOUSING_RULES,
+        contact_phone: "",
+        available_from: "",
     });
 
     // Check for edit mode
@@ -50,15 +53,19 @@ export default function HostListingWizard() {
                 .single();
 
             if (data && !error) {
+                const row = data as any;
                 setFormData({
-                    title: data.title,
-                    type: data.type,
-                    price: Number(data.price_amount) || 0, // Use numeric amount
-                    location: data.location,
-                    description: data.description,
-                    features: data.features || [],
-                    image_url: data.image,
-                    housing_rules: (data.housing_rules as any) || INITIAL_HOUSING_RULES
+                    title: row.title,
+                    type: row.type,
+                    price: Number(row.price_amount) || 0,
+                    location: row.location,
+                    description: row.description,
+                    features: row.features || [],
+                    image_url: row.image,
+                    images: row.images || [],
+                    housing_rules: row.housing_rules || INITIAL_HOUSING_RULES,
+                    contact_phone: row.contact_phone || "",
+                    available_from: row.available_from || "",
                 });
                 toast.info("Editing existing listing");
             }
@@ -100,7 +107,6 @@ export default function HostListingWizard() {
             let data, error;
 
             if (editId) {
-                // UPDATE existing listing
                 const result = await supabase
                     .from('listings')
                     .update({
@@ -112,8 +118,10 @@ export default function HostListingWizard() {
                         description: formData.description,
                         features: formData.features,
                         image: formData.image_url,
+                        images: formData.images as any,
                         housing_rules: formData.housing_rules as any,
-                        // author_id: profile.id // No need to update author
+                        ...(formData.contact_phone ? { contact_phone: formData.contact_phone } as any : {}),
+                        ...(formData.available_from ? { available_from: formData.available_from } as any : {}),
                     })
                     .eq('id', Number(editId))
                     .select()
@@ -122,21 +130,23 @@ export default function HostListingWizard() {
                 data = result.data;
                 error = result.error;
             } else {
-                // CREATE new listing
                 const result = await supabase
                     .from('listings')
                     .insert({
                         title: formData.title,
                         type: formData.type,
                         price: formData.price.toString(),
-                        price_amount: Number(formData.price), // Essential for filtering
+                        price_amount: Number(formData.price),
                         location: formData.location,
                         description: formData.description,
                         features: formData.features,
                         image: formData.image_url,
-                        housing_rules: formData.housing_rules as any, // Cast to any for Json type
+                        images: formData.images as any,
+                        housing_rules: formData.housing_rules as any,
                         author_id: profile.id,
-                        created_at: new Date().toISOString()
+                        created_at: new Date().toISOString(),
+                        ...(formData.contact_phone ? { contact_phone: formData.contact_phone } as any : {}),
+                        ...(formData.available_from ? { available_from: formData.available_from } as any : {}),
                     })
                     .select()
                     .single();
@@ -158,6 +168,7 @@ export default function HostListingWizard() {
         }
     };
 
+    // ─── Success Screen ───
     if (successId) {
         return (
             <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-500">
@@ -194,66 +205,144 @@ export default function HostListingWizard() {
         );
     }
 
+    const progress = (currentStep / STEPS.length) * 100;
+    const step = STEPS[currentStep - 1];
+
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
-            {/* Top Navigation */}
-            <div className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full text-gray-600 transition-colors">
-                        <ArrowLeft size={24} />
-                    </button>
+        <div className="min-h-screen bg-white flex flex-col">
+            {/* ─── Airbnb-style thin progress bar ─── */}
+            <div className="fixed top-0 left-0 right-0 z-[60] h-1.5 bg-gray-100">
+                <div
+                    className="h-full bg-gradient-to-r from-primary to-orange-500 transition-all duration-500 ease-out rounded-r-full"
+                    style={{ width: `${progress}%` }}
+                />
+            </div>
+
+            {/* ─── Desktop: Split-screen layout / Mobile: Stacked ─── */}
+            <div className="flex-1 flex flex-col lg:flex-row min-h-screen pt-1.5">
+
+                {/* ─── LEFT PANEL: Context (Desktop only) ─── */}
+                <div className="hidden lg:flex lg:w-[40%] xl:w-[35%] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-12 xl:p-16 flex-col justify-between sticky top-0 h-screen">
                     <div>
-                        <span className="text-xs font-semibold text-primary uppercase tracking-wider">Step {currentStep} of {STEPS.length}</span>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight">{STEPS[currentStep - 1].title}</h1>
+                        <button onClick={handleBack} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors mb-8">
+                            <ArrowLeft size={24} />
+                        </button>
+                        <div className="space-y-2 mb-12">
+                            <span className="text-xs font-bold uppercase tracking-[0.2em] text-orange-400">
+                                Step {currentStep} of {STEPS.length}
+                            </span>
+                            <h1 className="text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight">
+                                {step.subtitle}
+                            </h1>
+                            <p className="text-lg text-gray-400 leading-relaxed mt-4 max-w-md">
+                                {step.description}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Step dots */}
+                    <div className="flex items-center gap-3">
+                        {STEPS.map((s) => (
+                            <button
+                                key={s.id}
+                                onClick={() => s.id < currentStep && setCurrentStep(s.id)}
+                                className={`h-2.5 rounded-full transition-all duration-300 ${s.id === currentStep
+                                        ? 'w-10 bg-orange-400'
+                                        : s.id < currentStep
+                                            ? 'w-2.5 bg-green-400 cursor-pointer hover:bg-green-300'
+                                            : 'w-2.5 bg-gray-600'
+                                    }`}
+                            />
+                        ))}
                     </div>
                 </div>
-                <div className="w-12 h-12 relative flex items-center justify-center">
-                    <div className="text-xs font-bold text-gray-400">{Math.round((currentStep / STEPS.length) * 100)}%</div>
-                </div>
-            </div>
 
-            {/* Main Content Area */}
-            <div className="max-w-md mx-auto px-5 py-6">
-                {currentStep === 1 && (
-                    <Step1BasicInfo data={formData} update={updateFormData} />
-                )}
-                {currentStep === 2 && (
-                    <Step2Arrangement data={formData} update={updateFormData} />
-                )}
-                {currentStep === 3 && (
-                    <Step3Vibe data={formData} update={updateFormData} />
-                )}
-                {currentStep === 4 && (
-                    <Step4Preview data={formData} />
-                )}
-            </div>
+                {/* ─── RIGHT PANEL: Form content ─── */}
+                <div className="flex-1 flex flex-col">
 
-            {/* Bottom Floating Action Bar */}
-            <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 p-4 pb-6 z-50">
-                <div className="max-w-md mx-auto flex gap-3">
-                    {currentStep > 1 && (
-                        <button
-                            onClick={handleBack}
-                            className="flex-1 py-3.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
-                        >
-                            Back
-                        </button>
-                    )}
-                    <button
-                        onClick={handleNext}
-                        disabled={loading}
-                        className="flex-[2] py-3.5 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                    >
-                        {loading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            currentStep === STEPS.length ? (
-                                <>Publish Listing <Check size={20} /></>
+                    {/* Mobile-only header */}
+                    <div className="lg:hidden sticky top-1.5 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-100 px-5 py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full text-gray-600 transition-colors">
+                                    <ArrowLeft size={22} />
+                                </button>
+                                <div>
+                                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Step {currentStep}</span>
+                                    <h1 className="text-base font-bold text-gray-900 leading-tight">{step.title}</h1>
+                                </div>
+                            </div>
+                            {/* Mobile step dots */}
+                            <div className="flex items-center gap-1.5">
+                                {STEPS.map((s) => (
+                                    <div
+                                        key={s.id}
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${s.id === currentStep
+                                                ? 'w-6 bg-primary'
+                                                : s.id < currentStep
+                                                    ? 'w-1.5 bg-green-400'
+                                                    : 'w-1.5 bg-gray-200'
+                                            }`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ─── Form Content ─── */}
+                    <div className="flex-1 px-5 py-6 lg:px-12 xl:px-16 lg:py-12 lg:overflow-y-auto lg:max-h-[calc(100vh-80px)] lg:mt-1.5">
+                        <div className="max-w-2xl">
+                            {/* Desktop section title (within form area) */}
+                            <div className="hidden lg:block mb-8">
+                                <h2 className="text-2xl font-black text-gray-900">{step.title}</h2>
+                                <div className="w-10 h-1 bg-primary rounded-full mt-2" />
+                            </div>
+
+                            {currentStep === 1 && (
+                                <Step1BasicInfo data={formData} update={updateFormData} />
+                            )}
+                            {currentStep === 2 && (
+                                <Step2Arrangement data={formData} update={updateFormData} />
+                            )}
+                            {currentStep === 3 && (
+                                <Step3Vibe data={formData} update={updateFormData} />
+                            )}
+                            {currentStep === 4 && (
+                                <Step4Preview data={formData} />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ─── Bottom Action Bar (Airbnb-style) ─── */}
+                    <div className="sticky bottom-0 bg-white border-t border-gray-200 z-50">
+                        <div className="max-w-2xl mx-auto flex items-center justify-between px-5 py-4 lg:px-12 xl:px-16">
+                            {currentStep > 1 ? (
+                                <button
+                                    onClick={handleBack}
+                                    className="text-sm font-bold text-gray-900 underline underline-offset-4 decoration-gray-300 hover:decoration-gray-900 transition-all"
+                                >
+                                    Back
+                                </button>
                             ) : (
-                                <>Continue <ArrowRight size={20} /></>
-                            )
-                        )}
-                    </button>
+                                <div />
+                            )}
+                            <button
+                                onClick={handleNext}
+                                disabled={loading}
+                                className="px-8 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 shadow-lg shadow-primary/20 active:scale-[0.97] transition-all flex items-center gap-2 text-sm disabled:opacity-60"
+                            >
+                                {loading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    currentStep === STEPS.length ? (
+                                        <>Publish <Check size={18} /></>
+                                    ) : (
+                                        <>Next <ArrowRight size={18} /></>
+                                    )
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

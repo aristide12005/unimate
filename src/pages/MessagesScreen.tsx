@@ -44,16 +44,17 @@ const MessagesScreen = () => {
       const partnerIds = new Set();
 
       messages.forEach(msg => {
-        const partnerProfileId = msg.sender_id === myProfileId ? msg.receiver_id : msg.sender_id;
+        const m = msg as any;
+        const partnerProfileId = m.sender_id === myProfileId ? m.receiver_id : m.sender_id;
         if (!conversationMap.has(partnerProfileId)) {
           conversationMap.set(partnerProfileId, {
-            lastMessage: msg,
-            unread: (!msg.is_read && msg.receiver_id === myProfileId) ? 1 : 0
+            lastMessage: m,
+            unread: (!m.is_read && m.receiver_id === myProfileId) ? 1 : 0
           });
           partnerIds.add(partnerProfileId);
         } else {
           const current = conversationMap.get(partnerProfileId);
-          if (!msg.is_read && msg.receiver_id === myProfileId) {
+          if (!m.is_read && m.receiver_id === myProfileId) {
             current.unread += 1;
           }
         }
@@ -69,8 +70,8 @@ const MessagesScreen = () => {
       // Fetch profiles by 'id' (UUID) which matches the foreign key
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, user_id, first_name, last_name, username, avatar_url')
-        .in('id', Array.from(partnerIds));
+        .select('id, user_id, first_name, last_name, username, avatar_url, department, job_title')
+        .in('id', Array.from(partnerIds) as string[]);
 
       const partnersMap = new Map();
       profiles?.forEach(p => {
@@ -88,7 +89,9 @@ const MessagesScreen = () => {
           id: partnerProfileId, // Navigate using Profile ID
           name,
           avatar,
-          lastMessage: info.lastMessage.content,
+          department: profile?.department,
+          jobTitle: profile?.job_title,
+          lastMessage: info.lastMessage.is_deleted ? "Message deleted" : info.lastMessage.content,
           time: new Date(info.lastMessage.created_at).toLocaleDateString(),
           unread: info.unread,
           initials: name.substring(0, 2).toUpperCase()
@@ -109,7 +112,7 @@ const MessagesScreen = () => {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-24">
+    <div className="min-h-screen bg-background flex flex-col pb-24 lg:pb-6">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4">
         <h1 className="text-2xl font-black text-foreground">Messages</h1>
@@ -177,7 +180,15 @@ const MessagesScreen = () => {
                   <h3 className="text-sm font-bold text-foreground truncate">{convo.name}</h3>
                   <span className="text-[10px] text-muted-foreground font-semibold shrink-0 ml-2">{convo.time}</span>
                 </div>
-                <p className={`text-xs mt-0.5 truncate ${convo.unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}>
+                {(convo.jobTitle || convo.department) && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] font-medium text-primary bg-primary/5 border border-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                      {convo.jobTitle || 'Employee'}
+                    </span>
+                    {convo.department && <span className="text-[10px] text-muted-foreground truncate">{convo.department}</span>}
+                  </div>
+                )}
+                <p className={`text-xs mt-1 truncate ${convo.unread > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}>
                   {convo.lastMessage}
                 </p>
               </div>

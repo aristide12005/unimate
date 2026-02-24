@@ -10,7 +10,7 @@ const BottomNav = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 pt-3 pb-3 safe-bottom flex justify-between items-center z-50">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 pt-3 pb-3 safe-bottom flex justify-between items-center z-50">
       <button
         onClick={() => navigate("/home")}
         className={`flex flex-col items-center gap-1 transition-colors ${isActive("/home") ? "text-primary" : "text-gray-400"}`}

@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import UMLogo from "@/components/UMLogo";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const WelcomeScreen = () => {
   const [firstName, setFirstName] = useState("");
@@ -37,7 +39,7 @@ const WelcomeScreen = () => {
         first_name: firstName,
         last_name: lastName,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      } as any, { onConflict: 'user_id' });
 
     if (error) {
       toast.error("Could not save name");
@@ -61,17 +63,17 @@ const WelcomeScreen = () => {
 
       {/* Name Inputs */}
       <div className="w-full max-w-sm mt-8 space-y-4">
-        <input
+        <Input
           placeholder="First name"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-12 text-base"
         />
-        <input
+        <Input
           placeholder="Last name"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-foreground outline-none transition-all placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-12 text-base"
         />
       </div>
 
@@ -88,13 +90,13 @@ const WelcomeScreen = () => {
 
       {/* Continue Button */}
       <div className="w-full max-w-sm pb-8">
-        <button
+        <Button
           onClick={handleContinue}
           disabled={!firstName || !lastName}
-          className="w-full py-3.5 rounded-xl gradient-primary-btn text-white font-bold text-base shadow-lg hover:shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:shadow-none"
+          className="w-full py-6 text-base font-bold gradient-primary-btn shadow-lg hover:shadow-xl transition-all"
         >
           Continue
-        </button>
+        </Button>
         <p className="text-xs text-gray-400 text-center mt-4">
           Step 1 of 6
         </p>

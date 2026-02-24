@@ -30,7 +30,8 @@ export const UnreadProvider = ({ children }: { children: React.ReactNode }) => {
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('receiver_id', profile.id)
-            .eq('is_read', false);
+            .eq('is_read', false)
+            .eq('is_deleted', false);
 
         if (!error && count !== null) {
             setUnreadCount(count);
