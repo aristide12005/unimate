@@ -13,11 +13,17 @@ interface MobileWrapperProps {
 // Routes that have a dedicated Desktop experience
 const DESKTOP_PATHS = [
     "/home",
-    "/listings"
+    "/listings",
+    "/messages",
+    "/profile",
+    "/connect",
+    "/activity",
+    "/settings"
 ];
 
 const hasDesktopView = (pathname: string) => {
     if (pathname.startsWith("/admin")) return true;
+    if (pathname.startsWith("/user/")) return true; // generic user profiles
     if (DESKTOP_PATHS.includes(pathname)) return true;
     if (pathname.match(/^\/listings\/\d+$/)) return true; // /listings/:id
     return false;

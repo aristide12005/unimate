@@ -26,13 +26,13 @@ interface DesktopLayoutProps {
 const mainLinks = [
     { label: "Home", path: "/home", icon: Home },
     { label: "Rooms", path: "/listings", icon: Users, matchPrefix: true },
+    { label: "Messages", path: "/messages", icon: MessageCircle, badge: true },
+    { label: "Connect", path: "/connect", icon: Radio },
 ];
 
 // Tucked inside the "My Account" dropdown
 const accountLinks = [
-    { label: "Messages", path: "/messages", icon: MessageCircle, badge: true },
     { label: "Activity", path: "/activity", icon: Bell },
-    { label: "Connect", path: "/connect", icon: Radio },
     { label: "My Profile", path: "/profile", icon: User },
     { label: "Settings", path: "/settings", icon: Settings, matchPrefix: true },
 ];
@@ -86,7 +86,7 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
 
                     {/* Main links — always visible */}
                     <nav className="flex items-center gap-1">
-                        {mainLinks.map(({ label, path, icon: Icon, matchPrefix }) => {
+                        {mainLinks.map(({ label, path, icon: Icon, matchPrefix, badge }) => {
                             const active = isActive(path, matchPrefix);
                             return (
                                 <button
@@ -97,7 +97,14 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
                                         : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                                         }`}
                                 >
-                                    <Icon size={16} strokeWidth={active ? 2.5 : 2} />
+                                    <div className="relative">
+                                        <Icon size={16} strokeWidth={active ? 2.5 : 2} />
+                                        {badge && unreadCount > 0 && (
+                                            <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white">
+                                                {unreadCount > 9 ? "9+" : unreadCount}
+                                            </span>
+                                        )}
+                                    </div>
                                     {label}
                                 </button>
                             );
@@ -174,7 +181,7 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
                                             </div>
 
                                             {/* Account links */}
-                                            {accountLinks.map(({ label, path, icon: Icon, badge, matchPrefix }) => {
+                                            {accountLinks.map(({ label, path, icon: Icon, matchPrefix }) => {
                                                 const active = isActive(path, matchPrefix);
                                                 return (
                                                     <button
@@ -187,11 +194,6 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
                                                     >
                                                         <div className="relative">
                                                             <Icon size={15} className={active ? "text-primary" : "text-gray-400"} />
-                                                            {badge && unreadCount > 0 && (
-                                                                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[8px] font-bold w-3 h-3 rounded-full flex items-center justify-center border border-white">
-                                                                    {unreadCount > 9 ? "9+" : unreadCount}
-                                                                </span>
-                                                            )}
                                                         </div>
                                                         {label}
                                                         {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}

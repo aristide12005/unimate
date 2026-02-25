@@ -303,7 +303,7 @@ const HomeScreen = () => {
     <div className="min-h-screen bg-gray-50 pb-24 font-sans selection:bg-primary/10 w-full overflow-x-hidden">
 
       {/* ─── Video Hero Section ─── */}
-      <div className="relative w-full overflow-hidden" style={{ height: "62vw", minHeight: 280, maxHeight: 420 }}>
+      <div className="relative w-full overflow-hidden h-[320px] sm:h-[400px]">
         {/* Background video */}
         <video
           autoPlay
