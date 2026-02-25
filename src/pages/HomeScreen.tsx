@@ -57,11 +57,10 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
   listings: any[];
   loading: boolean;
   profile: any;
-  navigate: (path: string, opts?: any) => void;
+  navigate: any;
 }) => {
-}) => {
-  const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [search, setSearch] = useState("");
   const [bgIndex, setBgIndex] = useState(0);
 
   useEffect(() => {
