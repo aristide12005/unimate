@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell, Search, MapPin, ArrowRight, SlidersHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, useLocation } from "react-router-dom";
-import useEmblaCarousel from "embla-carousel-react";
-import { EmblaCarouselType } from "embla-carousel";
 import BottomNav from "@/components/BottomNav";
 import InstallPWA from "@/components/InstallPWA";
 import { useListings } from "@/hooks/useListings";
@@ -216,19 +214,7 @@ const HomeScreen = () => {
   const { unreadCount } = useUnread();
   const [profile, setProfile] = useState<any>(null);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, []);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelect(emblaApi);
-    emblaApi.on("select", () => onSelect(emblaApi));
-    emblaApi.on("reInit", () => onSelect(emblaApi));
-  }, [emblaApi, onSelect]);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -288,136 +274,161 @@ const HomeScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24 font-sans selection:bg-primary/10 w-full overflow-x-hidden">
+    <div className="bg-black w-full overflow-hidden h-[100dvh]">
 
-      {/* ─── Video Hero Section ─── */}
-      <div className="relative w-full overflow-hidden h-[320px] sm:h-[400px]">
-        {/* Background video */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+      {/* ─── Global Overlays (Floating on top) ─── */}
+      <div className="fixed top-0 left-0 right-0 z-50 px-5 pt-14 pb-2 flex items-center justify-between pointer-events-none">
+        {/* Left: Profile Badge */}
+        <div
+          className="flex items-center gap-3 cursor-pointer pointer-events-auto bg-black/20 backdrop-blur-md rounded-full pr-4 p-1 border border-white/10"
+          onClick={() => handleProtectedAction("/profile")}
         >
-          <source src={bgVideo} type="video/webm" />
-        </video>
-
-        {/* Dark gradient overlay — simpler for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/80" />
-
-        {/* ─── Header (floated on top of video) ─── */}
-        <div className="relative z-10 px-5 pt-14 pb-2 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleProtectedAction("/profile")}>
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
-              <img
-                src={profile?.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2"}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <p className="text-[10px] text-white/70 uppercase tracking-wider font-bold">Welcome {user ? 'back' : 'to uniMate'}</p>
-              <h2 className="text-base font-bold text-white leading-none truncate max-w-[200px]">
-                Hi {profile?.first_name || "Guest"} 👋
-              </h2>
-            </div>
+          <div className="w-9 h-9 rounded-full overflow-hidden border border-white/40 shadow-sm shrink-0">
+            <img
+              src={profile?.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2"}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
           </div>
-          <div className="flex items-center gap-1">
-            <InstallPWA />
-            <button
-              onClick={() => handleProtectedAction("/notifications")}
-              className="relative p-2 text-white hover:bg-white/10 rounded-full transition-colors drop-shadow-md"
-            >
-              <Bell size={22} />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-black/20" />
-              )}
-            </button>
-            <button
-              onClick={() => navigate("/listings", { state: { autoFocus: true } })}
-              className="p-2 text-white hover:bg-white/10 rounded-full transition-colors drop-shadow-md"
-            >
-              <Search size={22} />
-            </button>
+          <div className="hidden sm:block">
+            <p className="text-[9px] text-white/80 uppercase tracking-widest font-bold">Welcome {user ? 'back' : 'Guest'}</p>
+            <h2 className="text-sm font-bold text-white leading-none truncate max-w-[150px]">
+              {profile?.first_name || "Guest"}
+            </h2>
           </div>
         </div>
 
-        {/* ─── Hero Text + Search CTA ─── */}
-        <div className="relative z-10 px-6 mt-6 text-white">
-          <h1 className="text-2xl font-black tracking-tight leading-tight">
-            Find your perfect room<br />
-            <span className="text-primary">in Dakar</span>
-          </h1>
-          <p className="text-white/75 text-sm mt-1.5 font-medium">
-            Verified rooms near your university
-          </p>
-
-          {/* Search pill — taps into listings */}
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <InstallPWA />
+          <button
+            onClick={() => handleProtectedAction("/notifications")}
+            className="relative w-10 h-10 bg-black/20 backdrop-blur-md flex items-center justify-center text-white rounded-full transition-colors drop-shadow-lg border border-white/10"
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-black/20" />
+            )}
+          </button>
           <button
             onClick={() => navigate("/listings", { state: { autoFocus: true } })}
-            className="mt-5 w-full flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-lg active:scale-[0.98] transition-transform"
+            className="w-10 h-10 bg-black/20 backdrop-blur-md flex items-center justify-center text-white rounded-full transition-colors drop-shadow-lg border border-white/10"
           >
-            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Search size={16} className="text-primary" />
-            </div>
-            <span className="text-gray-400 text-sm font-semibold">Search rooms, areas, prices…</span>
-            <div className="ml-auto w-7 h-7 rounded-xl bg-primary flex items-center justify-center shrink-0">
-              <SlidersHorizontal size={13} className="text-white" />
-            </div>
+            <Search size={20} />
           </button>
         </div>
       </div>
 
-      {/* ─── Carousel ─── */}
-      <div className="embla" ref={emblaRef}>
-        <div className="flex touch-pan-y h-[280px]">
-          {listings.map((listing) => (
-            <div
-              key={listing.id}
-              className="flex-[0_0_88%] min-w-0 pl-4 relative"
-              onClick={() => navigate(`/listings/${listing.id}`)}
-            >
-              <div className="relative rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-lg h-full cursor-pointer">
-                <img src={listing.image} alt={listing.title} className="w-full h-full object-cover object-top" loading="eager" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
-                <div className="absolute bottom-0 left-0 right-0 p-8 text-white text-left">
-                  <h3 className="text-2xl font-bold mb-2 leading-tight line-clamp-2">{listing.title}</h3>
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className="text-[10px] uppercase font-bold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">{listing.type}</span>
-                    <span className="text-[10px] uppercase font-bold bg-primary/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">{listing.price}</span>
+      {/* ─── TikTok-Style Vertical Snap Feed ─── */}
+      <div className="h-[calc(100dvh-60px)] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar bg-black">
+        {listings.slice(0, 15).map((listing, index) => (
+          <div key={listing.id} className="h-full w-full snap-start relative bg-gray-900 group">
+
+            {/* Background Media */}
+            <div className="absolute inset-0 w-full h-full">
+              {/* Fallback pattern while loading */}
+              <div className="absolute inset-0 bg-gray-900" />
+              <img
+                src={listing.image}
+                alt={listing.title}
+                className="w-full h-full object-cover"
+                loading={index === 0 ? "eager" : "lazy"}
+              />
+            </div>
+
+            {/* Dark gradient overlay for text legibility at bottom */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none" />
+
+            {/* ─── Bottom Info Overlay ─── */}
+            <div className="absolute bottom-4 left-0 right-0 px-5 flex flex-col justify-end text-white safe-bottom pointer-events-auto">
+
+              <div className="flex justify-between items-end gap-4">
+                {/* Left: Details */}
+                <div className="flex-1">
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="text-[10px] uppercase font-bold bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+                      {listing.type}
+                    </span>
+                    {index === 0 && (
+                      <span className="text-[10px] uppercase font-bold bg-primary px-3 py-1 rounded-full border border-primary-dark">
+                        Trending
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-white/90 text-sm font-bold">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                      <MapPin size={12} className="text-white" />
+
+                  {/* Title */}
+                  <h3 className="text-2xl font-bold mb-1.5 leading-tight line-clamp-2 drop-shadow-md">
+                    {listing.title}
+                  </h3>
+
+                  {/* Location & Host */}
+                  <div className="flex items-center gap-3 text-white/90 text-xs font-semibold drop-shadow-md mb-4">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin size={14} className="text-primary-light" />
+                      <span className="truncate max-w-[120px]">{listing.location}</span>
                     </div>
-                    {listing.location}
+                    <span>•</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-gray-300 overflow-hidden shrink-0 border border-white/50">
+                        {listing.author?.avatar_url ? (
+                          <img src={listing.author.avatar_url} alt={listing.author.first_name || ""} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-400 text-[8px] text-white">
+                            {listing.author?.first_name?.charAt(0) || "U"}
+                          </div>
+                        )}
+                      </div>
+                      <span className="truncate max-w-[100px]">By {listing.author?.first_name || "Host"}</span>
+                    </div>
                   </div>
+
+                  {/* Price */}
+                  <div>
+                    <span className="text-3xl font-black">{listing.price}</span>
+                    <span className="text-sm font-medium text-white/70 ml-1">/month</span>
+                  </div>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex flex-col items-center gap-4 pb-2 shrink-0">
+                  <button
+                    onClick={() => navigate(`/listings/${listing.id}`)}
+                    className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-lg active:scale-95 transition-transform"
+                  >
+                    <ArrowRight size={22} strokeWidth={2.5} />
+                  </button>
+                  <button
+                    onClick={() => handleProtectedAction(`/chat/${listing.author?.id}`)}
+                    className="flex flex-col items-center"
+                  >
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+                      <MessageCircle size={22} strokeWidth={2.5} />
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        ))}
 
-      {/* ─── Pagination Dots & Quick Link ─── */}
-      <div className="flex items-center justify-between px-6 mt-6 mb-4">
-        <div className="flex gap-2">
-          {listings.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => emblaApi?.scrollTo(index)}
-              className={`transition-all duration-300 rounded-full ${selectedIndex === index ? "w-8 h-2 bg-primary" : "w-2 h-2 bg-gray-300 hover:bg-gray-400"}`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+        {/* End of feed CTA */}
+        <div className="h-[250px] w-full snap-start flex flex-col items-center justify-center bg-gray-50 px-6 text-center">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <Search size={28} className="text-primary" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Want to see more?</h3>
+          <p className="text-gray-500 text-sm mb-6 max-w-[250px]">
+            Use our directory to search by exact location, price, and amenities.
+          </p>
+          <button
+            onClick={() => navigate("/listings")}
+            className="w-full max-w-[200px] py-3.5 bg-primary text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform"
+          >
+            Go to Search
+          </button>
         </div>
-        <button
-          onClick={() => navigate("/listings")}
-          className="text-sm font-bold text-primary hover:underline flex items-center gap-1"
-        >
-          See all <ArrowRight size={14} />
-        </button>
       </div>
 
       <BottomNav />
