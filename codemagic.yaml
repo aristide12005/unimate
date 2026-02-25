@@ -87,7 +87,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your@email.com           # ← Change this
+          - admin@unimate.app        # ← Change this to your email
         notify:
           success: true
           failure: true

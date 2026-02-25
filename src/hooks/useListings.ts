@@ -103,7 +103,7 @@ export const useListings = () => {
 
                 const { data, error } = await query.order('created_at', { ascending: false });
 
-                console.log("Supabase Listings Fetch:", { data, error }); // DEBUG LOG
+                // Debug logging removed for production
 
                 if (error) throw error;
 

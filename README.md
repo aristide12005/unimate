@@ -1,73 +1,148 @@
-# Welcome to your Lovable project
+# uniMate - Student Housing & Roommate Finder
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+uniMate is a cross-platform mobile and web application for finding roommates and student housing. Built with React, TypeScript, Vite, and Capacitor for iOS/Android deployment.
 
-## How can I edit this code?
+**Features:**
+- User authentication (email/password + Google OAuth)
+- Room/housing listings with search and filters
+- Real-time chat system
+- Contract management between hosts and seekers
+- Admin dashboard with analytics
+- Push notifications (mobile)
+- Camera integration for photo uploads
+- Report and blocking system
 
-There are several ways of editing your application.
+## Technology Stack
 
-**Use Lovable**
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI Components**: shadcn/ui + Radix UI + Tailwind CSS
+- **Mobile**: Capacitor 8 (iOS/Android)
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **State Management**: React Query (TanStack)
+- **Routing**: React Router v6
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js 18+ (recommended: 22.13.1)
+- npm or yarn
+- For mobile builds: Xcode (iOS) or Android Studio (Android)
 
-**Use your preferred IDE**
+## Setup Instructions
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### 1. Clone and Install
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+cd uniMate
+npm install
 ```
 
-**Edit a file directly in GitHub**
+### 2. Environment Configuration
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Copy the example environment file and fill in your values:
 
-**Use GitHub Codespaces**
+```sh
+cp .env.example .env
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Edit `.env` with your Supabase credentials:
 
-## What technologies are used for this project?
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_ADMIN_SECRET=your-secure-admin-secret
+```
 
-This project is built with:
+**Important:** Never commit `.env` files to git. The `.gitignore` is configured to exclude them.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 3. Database Setup
 
-## How can I deploy this project?
+This project uses Supabase. Run the SQL migration files in order:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+1. Connect to your Supabase project
+2. Execute the SQL files from the root directory in order (1 through 15)
+3. Or use Supabase CLI: `supabase db reset` (if using local development)
 
-## Can I connect a custom domain to my Lovable project?
+### 4. Development
 
-Yes, you can!
+```sh
+# Start development server
+npm run dev
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Build for production
+npm run build
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Run tests
+npm run test
+```
+
+### 5. Mobile Development
+
+```sh
+# Add iOS platform
+npx cap add ios
+
+# Add Android platform
+npx cap add android
+
+# Sync web build to native platforms
+npx cap sync
+
+# Open iOS project in Xcode
+npx cap open ios
+
+# Open Android project in Android Studio
+npx cap open android
+```
+
+## Project Structure
+
+```
+src/
+├── pages/           # Screen components
+│   ├── admin/       # Admin dashboard pages
+│   ├── host/        # Host listing wizard
+│   ├── settings/    # Settings screens
+│   └── contract/    # Contract pages
+├── components/      # Reusable UI components
+├── contexts/        # React contexts (Auth, etc.)
+├── hooks/           # Custom hooks
+├── services/        # Service modules
+├── integrations/    # Third-party integrations
+│   └── supabase/    # Supabase client
+└── types/           # TypeScript types
+```
+
+## Deployment
+
+### Web (Vercel)
+
+1. Push to GitHub
+2. Connect to Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy
+
+### Mobile (via Codemagic)
+
+The project includes `codemagic.yaml` for CI/CD:
+
+1. Update the email recipient in `codemagic.yaml`
+2. Connect your repository to Codemagic
+3. Build will generate unsigned IPA (iOS) and APK (Android)
+
+## Security Notes
+
+- Keep your `VITE_ADMIN_SECRET` secure and use a strong random value
+- Never commit `.env` files or real credentials
+- The admin signup requires the secret code to prevent unauthorized access
+- All database access is through Supabase RLS (Row Level Security)
+
+## License
+
+[Add your license here]
+
+## Support
+
+[Add your support contact here]

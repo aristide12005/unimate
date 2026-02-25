@@ -23,8 +23,8 @@ const AdminSignupScreen = () => {
     const { signUp } = useAuth();
     const navigate = useNavigate();
 
-    // Hardcoded secret for now - in production this should be an env var or backend check
-    const ADMIN_SECRET = "UNIMATE_ADMIN_SECRET";
+    // Admin secret from environment variable - must be set in production
+    const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || "";
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
