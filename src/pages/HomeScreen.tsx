@@ -216,27 +216,8 @@ const HomeScreen = () => {
   const { unreadCount } = useUnread();
   const [profile, setProfile] = useState<any>(null);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center", skipSnaps: false });
-  const [tweenValues, setTweenValues] = useState<{ scale: number; rotate: number; zIndex: number; opacity: number; xTranslate: string }[]>([]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const onScroll = useCallback((emblaApi: EmblaCarouselType) => {
-    if (!emblaApi) return;
-    const scrollProgress = emblaApi.scrollProgress();
-    const snaps = emblaApi.scrollSnapList();
-    if (!snaps || snaps.length === 0) return;
-    const styles = snaps.map((snap) => {
-      let diffToTarget = snap - scrollProgress;
-      if (Math.abs(diffToTarget) > 1) diffToTarget = diffToTarget - Math.sign(diffToTarget) * snaps.length;
-      const isNext = diffToTarget > 0;
-      const zIndex = Math.round(10 - Math.abs(diffToTarget) * 10);
-      const scale = 1 - Math.abs(diffToTarget) * 0.05;
-      const opacity = 1 - Math.abs(diffToTarget) * 0.1;
-      const xTranslate = isNext ? `${diffToTarget * -100}%` : '0%';
-      return { scale, rotate: 0, zIndex, opacity, xTranslate };
-    });
-    setTweenValues(styles as any);
-  }, []);
 
   const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
     setSelectedIndex(emblaApi.selectedScrollSnap());
@@ -244,12 +225,10 @@ const HomeScreen = () => {
 
   useEffect(() => {
     if (!emblaApi) return;
-    onScroll(emblaApi);
     onSelect(emblaApi);
-    emblaApi.on("scroll", () => onScroll(emblaApi));
-    emblaApi.on("reInit", () => onScroll(emblaApi));
     emblaApi.on("select", () => onSelect(emblaApi));
-  }, [emblaApi, onScroll, onSelect]);
+    emblaApi.on("reInit", () => onSelect(emblaApi));
+  }, [emblaApi, onSelect]);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -324,13 +303,13 @@ const HomeScreen = () => {
           <source src={bgVideo} type="video/webm" />
         </video>
 
-        {/* Dark gradient overlay — stronger at bottom for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/70" />
+        {/* Dark gradient overlay — simpler for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/80" />
 
         {/* ─── Header (floated on top of video) ─── */}
         <div className="relative z-10 px-5 pt-14 pb-2 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleProtectedAction("/profile")}>
-            <div className="w-10 h-10 rounded-full bg-white/20 overflow-hidden border-2 border-white/40">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
               <img
                 src={profile?.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2"}
                 alt="Profile"
@@ -344,22 +323,22 @@ const HomeScreen = () => {
               </h2>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
             <InstallPWA />
             <button
               onClick={() => handleProtectedAction("/notifications")}
-              className="relative w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+              className="relative p-2 text-white hover:bg-white/10 rounded-full transition-colors drop-shadow-md"
             >
-              <Bell size={18} />
+              <Bell size={22} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
+                <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full border border-black/20" />
               )}
             </button>
             <button
               onClick={() => navigate("/listings", { state: { autoFocus: true } })}
-              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+              className="p-2 text-white hover:bg-white/10 rounded-full transition-colors drop-shadow-md"
             >
-              <Search size={18} />
+              <Search size={22} />
             </button>
           </div>
         </div>
@@ -377,7 +356,7 @@ const HomeScreen = () => {
           {/* Search pill — taps into listings */}
           <button
             onClick={() => navigate("/listings", { state: { autoFocus: true } })}
-            className="mt-5 w-full flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3.5 shadow-2xl active:scale-[0.98] transition-transform"
+            className="mt-5 w-full flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-lg active:scale-[0.98] transition-transform"
           >
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <Search size={16} className="text-primary" />
@@ -392,19 +371,14 @@ const HomeScreen = () => {
 
       {/* ─── Carousel ─── */}
       <div className="embla" ref={emblaRef}>
-        <div className="flex px-4 items-center touch-pan-y h-[280px]">
-          {listings.map((listing, index) => (
+        <div className="flex touch-pan-y h-[280px]">
+          {listings.map((listing) => (
             <div
               key={listing.id}
-              className="flex-[0_0_100%] min-w-0 px-4 relative"
-              style={{
-                transform: `translateX(${tweenValues[index]?.xTranslate ?? '0%'}) scale(${tweenValues[index]?.scale ?? 0.9})`,
-                opacity: tweenValues[index]?.opacity ?? 1,
-                zIndex: tweenValues[index]?.zIndex ?? 1,
-              }}
+              className="flex-[0_0_88%] min-w-0 pl-4 relative"
               onClick={() => navigate(`/listings/${listing.id}`)}
             >
-              <div className="relative rounded-[2.5rem] overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-2xl h-full cursor-pointer">
+              <div className="relative rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-lg h-full cursor-pointer">
                 <img src={listing.image} alt={listing.title} className="w-full h-full object-cover object-top" loading="eager" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white text-left">
@@ -426,29 +400,23 @@ const HomeScreen = () => {
         </div>
       </div>
 
-      {/* ─── Pagination Dots ─── */}
-      <div className="flex justify-center gap-2 mt-6">
-        {listings.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => emblaApi?.scrollTo(index)}
-            className={`transition-all duration-300 rounded-full ${selectedIndex === index ? "w-8 h-2 bg-primary" : "w-2 h-2 bg-gray-300 hover:bg-gray-400"}`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* ─── See All Listings CTA ─── */}
-      <div className="mt-8 px-6 mb-4">
+      {/* ─── Pagination Dots & Quick Link ─── */}
+      <div className="flex items-center justify-between px-6 mt-6 mb-4">
+        <div className="flex gap-2">
+          {listings.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => emblaApi?.scrollTo(index)}
+              className={`transition-all duration-300 rounded-full ${selectedIndex === index ? "w-8 h-2 bg-primary" : "w-2 h-2 bg-gray-300 hover:bg-gray-400"}`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
         <button
           onClick={() => navigate("/listings")}
-          className="w-full flex items-center justify-between bg-primary/10 border border-primary/20 rounded-2xl px-5 py-4 hover:bg-primary/15 transition-colors active:scale-[0.98]"
+          className="text-sm font-bold text-primary hover:underline flex items-center gap-1"
         >
-          <div className="text-left">
-            <p className="text-sm font-bold text-primary">Browse all rooms</p>
-            <p className="text-xs text-primary/70 mt-0.5">Find your perfect match nearby</p>
-          </div>
-          <ArrowRight size={18} className="text-primary shrink-0" />
+          See all <ArrowRight size={14} />
         </button>
       </div>
 
