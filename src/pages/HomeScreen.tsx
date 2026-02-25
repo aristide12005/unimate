@@ -15,10 +15,10 @@ import bgVideo2 from "@/assets/background2.webm";
 import bgVideo3 from "@/assets/background3.webm";
 
 const MEDIA_SLIDES = [bgVideo1, bgVideo2, bgVideo3];
+const CATEGORIES = ["All", "Single Room", "Shared Room", "Studio", "Apartment", "En-suite"];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Desktop listing card
-// ─────────────────────────────────────────────────────────────────────────────
+
 const ListingCard = ({ listing, onClick }: { listing: any; onClick: () => void }) => (
   <div
     onClick={onClick}
