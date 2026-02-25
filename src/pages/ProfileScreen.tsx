@@ -1,4 +1,4 @@
-import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefcase, GraduationCap, Phone, MessageCircle, Zap, Globe, Home } from "lucide-react";
+import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefcase, GraduationCap, Phone, MessageCircle, Zap, Globe, Home, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -374,6 +374,17 @@ const ProfileScreen = () => {
           </div>
           <span className="text-sm font-bold text-white flex-1 text-left">{isHostMode ? "Post a Room" : "Become a Host"}</span>
           <ArrowRightIcon className="text-white/70" size={18} />
+        </button>
+
+        <button
+          onClick={() => navigate("/contracts")}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-white shadow-sm border border-gray-100 hover:border-primary/20 hover:bg-primary/5 transition-colors mb-2 group"
+        >
+          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+            <FileText className="text-blue-600 group-hover:text-primary transition-colors" size={20} />
+          </div>
+          <span className="text-sm font-bold text-gray-800 flex-1 text-left">My Contracts</span>
+          <ArrowRightIcon className="text-gray-400 group-hover:translate-x-1 transition-transform" size={18} />
         </button>
 
         <button

@@ -39,8 +39,12 @@ import SettingsScreen from "./pages/SettingsScreen";
 import ChangePasswordScreen from "./pages/settings/ChangePasswordScreen";
 import { HelpCenterScreen, TermsOfServiceScreen, PrivacyPolicyScreen } from "./pages/settings/SupportScreens";
 import NotFound from "./pages/NotFound";
+import ContractsScreen from "./pages/ContractsScreen";
+
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+
+
 import ReportsDashboard from "./pages/admin/ReportsDashboard";
 import EmployeeReports from "./pages/admin/EmployeeReports";
 import UserReports from "./pages/admin/UserReports";
@@ -92,6 +96,7 @@ const App = () => (
                   <Route path="/notifications" element={<ProtectedRoute requireProfile><NotificationScreen /></ProtectedRoute>} />
                   <Route path="/messages" element={<ProtectedRoute requireProfile><MessagesScreen /></ProtectedRoute>} />
                   <Route path="/activity" element={<ProtectedRoute requireProfile><ActivityScreen /></ProtectedRoute>} />
+                  <Route path="/contracts" element={<ProtectedRoute requireProfile><ContractsScreen /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute requireProfile><ProfileScreen /></ProtectedRoute>} />
                   <Route path="/edit-profile" element={<ProtectedRoute requireProfile><EditProfileScreen /></ProtectedRoute>} />
                   <Route path="/post-room" element={<ProtectedRoute requireProfile><HostListingWizard /></ProtectedRoute>} />
