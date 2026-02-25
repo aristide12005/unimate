@@ -214,8 +214,6 @@ const HomeScreen = () => {
   const { unreadCount } = useUnread();
   const [profile, setProfile] = useState<any>(null);
 
-  const [profile, setProfile] = useState<any>(null);
-
   useEffect(() => {
     const getProfile = async () => {
       if (!user) return;
