@@ -1,13 +1,23 @@
 import { Home, Users, Radio, MessageCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUnread } from "@/contexts/UnreadContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BottomNav = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount } = useUnread();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleProtectedNavigation = (path: string) => {
+    if (!user) {
+      navigate('/login', { state: { returnTo: path } });
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 pt-3 pb-3 safe-bottom flex justify-between items-center z-50">
@@ -28,7 +38,7 @@ const BottomNav = () => {
       </button>
 
       <button
-        onClick={() => navigate("/connect")}
+        onClick={() => handleProtectedNavigation("/connect")}
         className={`flex flex-col items-center gap-1 transition-colors ${isActive("/connect") ? "text-primary" : "text-gray-400"}`}
       >
         <Radio size={24} strokeWidth={isActive("/connect") ? 2.5 : 2} />
@@ -36,7 +46,7 @@ const BottomNav = () => {
       </button>
 
       <button
-        onClick={() => navigate("/messages")}
+        onClick={() => handleProtectedNavigation("/messages")}
         className={`relative flex flex-col items-center gap-1 transition-colors ${isActive("/messages") ? "text-primary" : "text-gray-400"}`}
       >
         <div className="relative">

@@ -26,15 +26,15 @@ interface DesktopLayoutProps {
 const mainLinks = [
     { label: "Home", path: "/home", icon: Home },
     { label: "Rooms", path: "/listings", icon: Users, matchPrefix: true },
-    { label: "Messages", path: "/messages", icon: MessageCircle, badge: true },
-    { label: "Connect", path: "/connect", icon: Radio },
+    { label: "Messages", path: "/messages", icon: MessageCircle, badge: true, protectedAuth: true },
+    { label: "Connect", path: "/connect", icon: Radio, protectedAuth: true },
 ];
 
 // Tucked inside the "My Account" dropdown
 const accountLinks = [
-    { label: "Activity", path: "/activity", icon: Bell },
-    { label: "My Profile", path: "/profile", icon: User },
-    { label: "Settings", path: "/settings", icon: Settings, matchPrefix: true },
+    { label: "Activity", path: "/activity", icon: Bell, protectedAuth: true },
+    { label: "My Profile", path: "/profile", icon: User, protectedAuth: true },
+    { label: "Settings", path: "/settings", icon: Settings, matchPrefix: true, protectedAuth: true },
 ];
 
 const DesktopLayout = ({ children }: DesktopLayoutProps) => {
@@ -55,6 +55,14 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
 
     // Total badge count across all dropdown items
     const totalBadge = unreadCount;
+
+    const handleProtectedNavigation = (path: string, isProtected?: boolean) => {
+        if (isProtected && !user) {
+            navigate('/login', { state: { returnTo: path } });
+        } else {
+            navigate(path);
+        }
+    };
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -86,12 +94,12 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
 
                     {/* Main links — always visible */}
                     <nav className="flex items-center gap-1">
-                        {mainLinks.map(({ label, path, icon: Icon, matchPrefix, badge }) => {
+                        {mainLinks.map(({ label, path, icon: Icon, matchPrefix, badge, protectedAuth }) => {
                             const active = isActive(path, matchPrefix);
                             return (
                                 <button
                                     key={path}
-                                    onClick={() => navigate(path)}
+                                    onClick={() => handleProtectedNavigation(path, protectedAuth)}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${active
                                         ? "bg-primary/10 text-primary"
                                         : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
@@ -181,12 +189,12 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
                                             </div>
 
                                             {/* Account links */}
-                                            {accountLinks.map(({ label, path, icon: Icon, matchPrefix }) => {
+                                            {accountLinks.map(({ label, path, icon: Icon, matchPrefix, protectedAuth }) => {
                                                 const active = isActive(path, matchPrefix);
                                                 return (
                                                     <button
                                                         key={path}
-                                                        onClick={() => { setAccountOpen(false); navigate(path); }}
+                                                        onClick={() => { setAccountOpen(false); handleProtectedNavigation(path, protectedAuth); }}
                                                         className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${active
                                                             ? "bg-primary/8 text-primary font-medium"
                                                             : "text-gray-700 hover:bg-gray-50"

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ const LoginScreen = () => {
   const [showForgot, setShowForgot] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async () => {
     if (!email || (!showForgot && !password)) {
@@ -60,7 +61,8 @@ const LoginScreen = () => {
               .single();
 
             if (profile?.onboarding_complete) {
-              navigate("/home");
+              const returnTo = location.state?.returnTo || "/home";
+              navigate(returnTo);
             } else {
               navigate("/welcome");
             }
@@ -177,6 +179,17 @@ const LoginScreen = () => {
           )}
           {showForgot ? "Send Reset Link" : "Continue"}
         </button>
+
+        {/* Guest fallback */}
+        {!showForgot && (
+          <button
+            onClick={() => navigate('/home')}
+            type="button"
+            className="w-full mt-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            Not now, continue as guest
+          </button>
+        )}
       </div>
 
       {/* Footer */}

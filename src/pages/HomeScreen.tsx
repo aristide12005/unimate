@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, Search, MapPin, ArrowRight, SlidersHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { EmblaCarouselType } from "embla-carousel";
 import BottomNav from "@/components/BottomNav";
@@ -203,6 +203,15 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
 const HomeScreen = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleProtectedAction = (path: string) => {
+    if (!user) {
+      navigate('/login', { state: { returnTo: location.pathname } });
+    } else {
+      navigate(path);
+    }
+  };
   const isMobile = useIsMobile();
   const { unreadCount } = useUnread();
   const [profile, setProfile] = useState<any>(null);
@@ -320,7 +329,7 @@ const HomeScreen = () => {
 
         {/* ─── Header (floated on top of video) ─── */}
         <div className="relative z-10 px-5 pt-14 pb-2 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/profile")}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleProtectedAction("/profile")}>
             <div className="w-10 h-10 rounded-full bg-white/20 overflow-hidden border-2 border-white/40">
               <img
                 src={profile?.avatar_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2"}
@@ -338,7 +347,7 @@ const HomeScreen = () => {
           <div className="flex items-center gap-3">
             <InstallPWA />
             <button
-              onClick={() => navigate("/notifications")}
+              onClick={() => handleProtectedAction("/notifications")}
               className="relative w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/25 transition-colors"
             >
               <Bell size={18} />

@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Bookmark, Share, Send, MapPin, MessageCircle, MoreVertical, Edit, Trash, Images, Heart, ChevronLeft, ChevronRight, Star, Phone, Calendar, Home, Bath, Maximize, ExternalLink } from "lucide-react";
 import { useListings } from "@/hooks/useListings";
 import { toast } from "sonner";
@@ -147,6 +147,7 @@ function ListingMap({ location, title, price, lat, lon }: { location: string; ti
 const ListingDetailsScreen = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { listings, savedListingIds, toggleSave } = useListings();
     const { user, profile } = useAuth() as any;
     const [requesting, setRequesting] = useState(false);
@@ -206,7 +207,7 @@ const ListingDetailsScreen = () => {
     const handleRequestArrangement = async () => {
         if (!user || !profile) {
             toast.error("Please log in to book this room");
-            navigate('/login');
+            navigate('/login', { state: { returnTo: location.pathname } });
             return;
         }
         if (!singleListing) return;
@@ -533,7 +534,7 @@ const ListingDetailsScreen = () => {
                                 <button
                                     onClick={() => {
                                         if (!user) {
-                                            navigate('/login');
+                                            navigate('/login', { state: { returnTo: location.pathname } });
                                             return;
                                         }
                                         navigate(`/chat/${listing.author.id}`);
@@ -595,7 +596,7 @@ const ListingDetailsScreen = () => {
                         <button
                             onClick={() => {
                                 if (!user) {
-                                    navigate('/login');
+                                    navigate('/login', { state: { returnTo: location.pathname } });
                                     return;
                                 }
                                 toggleSave(listing.id);
@@ -720,7 +721,7 @@ const ListingDetailsScreen = () => {
                                 <button
                                     onClick={() => {
                                         if (!user) {
-                                            navigate('/login');
+                                            navigate('/login', { state: { returnTo: location.pathname } });
                                             return;
                                         }
                                         navigate(`/chat/${listing.author.id}`);

@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import splashBg from "@/assets/splash-bg.jpg";
 import logo from "@/assets/logo.png";
 
 const SplashScreen = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -28,12 +30,17 @@ const SplashScreen = () => {
           navigate("/welcome"); // Start/Resume onboarding
         }
       } else {
-        navigate("/login");
+        if (isMobile) {
+          navigate("/login");
+        } else {
+          // Desktop bypasses login entirely and goes to browsing
+          navigate("/home");
+        }
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, isMobile]);
 
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center overflow-hidden bg-background">
