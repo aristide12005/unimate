@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Search, MapPin, ArrowRight, SlidersHorizontal } from "lucide-react";
+import { Bell, Search, MapPin, ArrowRight, SlidersHorizontal, MessageCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";

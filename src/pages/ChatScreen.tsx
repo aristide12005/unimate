@@ -38,10 +38,10 @@ const ChatScreen = () => {
     const [isBlockAlertOpen, setIsBlockAlertOpen] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
 
-    // Rich Message Modals
     const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
     const [newConditionText, setNewConditionText] = useState("");
     const [isListingModalOpen, setIsListingModalOpen] = useState(false);
+    const [listingModalTitle, setListingModalTitle] = useState("Share a Listing");
     const [myListings, setMyListings] = useState<any[]>([]);
 
     const scrollToBottom = () => {
@@ -489,14 +489,18 @@ const ChatScreen = () => {
         }
     };
 
-    // Fetch my listings when opening modal
-    const openListingModal = async () => {
-        if (!senderProfile) return;
+    // Fetch listings when opening modal (either mine or theirs)
+    const openListingModal = async (type: 'mine' | 'theirs') => {
+        if (!senderProfile || !receiver?.id) return;
         setIsListingModalOpen(true);
+
+        const targetId = type === 'mine' ? senderProfile.id : receiver.id;
+        setListingModalTitle(type === 'mine' ? "Share My Listing" : "Share Their Listing");
+
         const { data, error } = await supabase
             .from('listings')
             .select('*')
-            .eq('author_id', senderProfile.id);
+            .eq('author_id', targetId);
 
         if (data) setMyListings(data);
     };
@@ -938,13 +942,22 @@ const ChatScreen = () => {
                         </PopoverTrigger>
                         <PopoverContent className="w-64 p-2 rounded-2xl shadow-xl border border-gray-100 mb-2 ml-2" align="start" sideOffset={10}>
                             <div className="flex flex-col gap-1">
-                                <button onClick={() => { document.body.click(); openListingModal(); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-sm font-bold text-gray-700 transition-colors text-left w-full group">
+                                <button onClick={() => { document.body.click(); openListingModal('mine'); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-sm font-bold text-gray-700 transition-colors text-left w-full group">
                                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                         <Home size={18} />
                                     </div>
                                     <div className="flex flex-col">
                                         <span>Share My Listing</span>
                                         <span className="text-[10px] text-gray-400 font-medium tracking-wide">Send a room preview</span>
+                                    </div>
+                                </button>
+                                <button onClick={() => { document.body.click(); openListingModal('theirs'); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-sm font-bold text-gray-700 transition-colors text-left w-full group mt-1">
+                                    <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                                        <Home size={18} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span>Share Their Listing</span>
+                                        <span className="text-[10px] text-gray-400 font-medium tracking-wide">Ask about their room</span>
                                     </div>
                                 </button>
                                 <button onClick={() => { document.body.click(); setIsConditionModalOpen(true); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-sm font-bold text-gray-700 transition-colors text-left w-full group mt-1">
@@ -993,6 +1006,37 @@ const ChatScreen = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Listing Selection Dialog */}
+            <Dialog open={isListingModalOpen} onOpenChange={setIsListingModalOpen}>
+                <DialogContent className="sm:max-w-md rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl font-black">
+                            <Home className="text-primary" /> {listingModalTitle}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-2 flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
+                        {myListings.length === 0 ? (
+                            <p className="text-gray-500 text-center py-6 text-sm font-medium">No active listings to share.</p>
+                        ) : (
+                            myListings.map(listing => (
+                                <div
+                                    key={listing.id}
+                                    onClick={() => handleShareListing(listing)}
+                                    className="flex items-center gap-4 p-3 border border-gray-100 rounded-2xl hover:bg-gray-50 hover:border-primary/30 cursor-pointer transition-all active:scale-95 group"
+                                >
+                                    <img src={listing.image} alt={listing.title} className="w-16 h-16 rounded-xl object-cover" />
+                                    <div className="flex-1 overflow-hidden">
+                                        <h4 className="font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{listing.title}</h4>
+                                        <p className="font-bold text-primary text-sm mt-0.5">{listing.price}</p>
+                                    </div>
+                                    <Send size={18} className="text-gray-300 group-hover:text-primary mr-2 transition-colors" />
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Edit Dialog */}
             <AlertDialog open={!!editingMessage} onOpenChange={(open) => !open && setEditingMessage(null)}>
