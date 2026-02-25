@@ -22,29 +22,34 @@ const CATEGORIES = ["All", "Single Room", "Shared Room", "Studio", "Apartment", 
 const ListingCard = ({ listing, onClick }: { listing: any; onClick: () => void }) => (
   <div
     onClick={onClick}
-    className="group cursor-pointer rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+    className="group cursor-pointer rounded-[1.5rem] overflow-hidden bg-white/95 backdrop-blur-md border border-white/40 shadow-soft hover:shadow-elevated transition-all duration-500 hover:-translate-y-2 relative z-10"
   >
-    <div className="relative h-52 overflow-hidden bg-gray-100">
+    <div className="relative h-56 overflow-hidden bg-gray-50">
       <img
         src={listing.image}
         alt={listing.title}
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
         loading="lazy"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-      <span className="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full shadow-sm">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10" />
+      <span className="absolute top-4 left-4 bg-primary/90 backdrop-blur-md text-white text-[11px] font-bold uppercase px-3 py-1.5 rounded-full shadow-lg z-20">
         {listing.type}
       </span>
-    </div>
-    <div className="p-4">
-      <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-1">{listing.title}</h3>
-      <div className="flex items-center gap-1 text-gray-400 text-xs mb-3">
-        <MapPin size={11} />
-        <span className="line-clamp-1">{listing.location}</span>
+      <div className="absolute bottom-4 left-4 right-4 z-20">
+        <h3 className="font-extrabold text-white text-[17px] mb-1 line-clamp-1 drop-shadow-md">{listing.title}</h3>
+        <div className="flex items-center gap-1.5 text-white/90 text-[13px] drop-shadow-sm">
+          <MapPin size={13} className="text-white/80" />
+          <span className="line-clamp-1">{listing.location}</span>
+        </div>
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-primary font-bold text-sm">{listing.price}</span>
-        <span className="text-[11px] text-gray-400">/month</span>
+    </div>
+    <div className="p-5 flex items-center justify-between">
+      <div className="flex flex-col">
+        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Monthly</span>
+        <span className="text-secondary font-black text-[19px]">{listing.price}</span>
+      </div>
+      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+        <ArrowRight size={18} />
       </div>
     </div>
   </div>
@@ -111,7 +116,7 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
             Browse verified listings from trusted hosts in your university area.
           </p>
           {/* Search bar */}
-          <div className="flex items-center bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden pr-2 gap-0">
+          <div className="flex items-center glass-panel rounded-2xl overflow-hidden pr-2 mt-4 gap-0 relative z-20 hover:shadow-elevated transition-shadow duration-300">
             <div className="flex items-center gap-3 flex-1 px-5 py-4">
               <Search size={18} className="text-gray-400 shrink-0" />
               <input
@@ -123,7 +128,7 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
             </div>
             <button
               onClick={() => navigate("/listings", { state: { autoFocus: true } })}
-              className="bg-primary hover:bg-primary/90 text-white font-semibold text-sm px-6 py-3 rounded-xl transition-all active:scale-95 shrink-0"
+              className="gradient-primary-btn text-white font-bold text-sm px-6 py-3.5 rounded-xl transition-all hover:brightness-110 active:scale-95 shrink-0"
             >
               Search
             </button>
@@ -136,14 +141,14 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
       </div>
 
       {/* ── Category filters ── */}
-      <div className="flex items-center gap-2 mb-8 flex-wrap">
+      <div className="flex items-center gap-3 mb-10 mt-4 flex-wrap px-2">
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${activeCategory === cat
-              ? "bg-primary text-white border-primary shadow-sm"
-              : "bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary"
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${activeCategory === cat
+              ? "gradient-primary-btn text-white shadow-soft"
+              : "bg-white text-gray-500 border border-gray-100 hover:border-primary/30 hover:text-primary hover:shadow-sm"
               }`}
           >
             {cat}
@@ -151,9 +156,9 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
         ))}
         <button
           onClick={() => navigate("/listings")}
-          className="ml-auto flex items-center gap-1.5 text-sm text-gray-400 hover:text-primary transition-colors"
+          className="ml-auto flex items-center gap-2 text-sm text-gray-400 hover:text-primary transition-colors font-medium px-4 py-2"
         >
-          <SlidersHorizontal size={14} />
+          <SlidersHorizontal size={15} />
           All filters
         </button>
       </div>
@@ -319,7 +324,7 @@ const HomeScreen = () => {
         {/* Left: Profile Badge */}
         <div
           onClick={() => handleProtectedAction("/profile")}
-          className="flex items-center gap-2 bg-black/20 backdrop-blur-md pl-1.5 pr-4 py-1.5 rounded-full border border-white/10 shadow-lg pointer-events-auto active:scale-95 transition-transform"
+          className="flex items-center gap-2 glass-panel-dark pl-1.5 pr-4 py-1.5 rounded-full pointer-events-auto active:scale-95 transition-transform"
         >
           <div className="w-9 h-9 rounded-full overflow-hidden border border-white/40 shadow-sm shrink-0">
             <img
@@ -337,20 +342,20 @@ const HomeScreen = () => {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center gap-3 pointer-events-auto">
           <InstallPWA />
           <button
             onClick={() => handleProtectedAction("/notifications")}
-            className="relative w-10 h-10 bg-black/20 backdrop-blur-md flex items-center justify-center text-white rounded-full transition-colors drop-shadow-lg border border-white/10"
+            className="relative w-11 h-11 glass-panel-dark flex items-center justify-center text-white rounded-full transition-colors"
           >
             <Bell size={20} />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-black/20" />
+              <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border border-black/20 shadow-sm" />
             )}
           </button>
           <button
             onClick={() => navigate("/listings", { state: { autoFocus: true } })}
-            className="w-10 h-10 bg-black/20 backdrop-blur-md flex items-center justify-center text-white rounded-full transition-colors drop-shadow-lg border border-white/10"
+            className="w-11 h-11 glass-panel-dark flex items-center justify-center text-white rounded-full transition-colors"
           >
             <Search size={20} />
           </button>
@@ -429,19 +434,19 @@ const HomeScreen = () => {
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex flex-col items-center gap-4 pb-2 shrink-0">
+                <div className="flex flex-col items-center gap-5 pb-3 shrink-0">
                   <button
                     onClick={() => navigate(`/listings/${listing.id}`)}
-                    className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-lg active:scale-95 transition-transform"
+                    className="w-[3.25rem] h-[3.25rem] glass-panel-dark rounded-full flex items-center justify-center text-white active:scale-95 transition-transform"
                   >
-                    <ArrowRight size={22} strokeWidth={2.5} />
+                    <ArrowRight size={24} strokeWidth={2.5} />
                   </button>
                   <button
                     onClick={() => handleProtectedAction(`/chat/${listing.author?.id}`)}
                     className="flex flex-col items-center"
                   >
-                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform">
-                      <MessageCircle size={22} strokeWidth={2.5} />
+                    <div className="w-[3.25rem] h-[3.25rem] gradient-primary-btn rounded-full flex items-center justify-center text-white active:scale-95 transition-transform">
+                      <MessageCircle size={24} strokeWidth={2.5} />
                     </div>
                   </button>
                 </div>

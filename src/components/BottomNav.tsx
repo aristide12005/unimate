@@ -20,7 +20,7 @@ const BottomNav = () => {
   };
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 pt-3 pb-3 safe-bottom flex justify-between items-center z-50">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100/50 px-6 pt-4 pb-4 safe-bottom flex justify-between items-center z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.06)]">
       <button
         onClick={() => navigate("/home")}
         className={`flex flex-col items-center gap-1 transition-colors ${isActive("/home") ? "text-primary" : "text-gray-400"}`}

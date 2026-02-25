@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+import os
+
+css_content = """@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -180,3 +182,9 @@
     padding-right: env(safe-area-inset-right);
   }
 }
+"""
+
+with open('src/index.css', 'w', encoding='utf-8') as f:
+    f.write(css_content)
+
+print("index.css updated!")
