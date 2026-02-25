@@ -126,47 +126,42 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
                             </>
                         ) : (
                             <>
-                                {/* Post a Room / Become a Host */}
+                                {/* Language Selector */}
+                                <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors font-bold text-sm">
+                                    Eng
+                                    <ChevronDown size={14} strokeWidth={3} />
+                                </button>
+
+                                {/* Notification Bell */}
                                 <button
-                                    onClick={() => {
-                                        if (profile?.host_mode_active) {
-                                            navigate("/post-room");
-                                        } else {
-                                            navigate("/profile?activateHost=true");
-                                        }
-                                    }}
-                                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95"
+                                    onClick={() => navigate('/activity')}
+                                    className="relative w-10 h-10 rounded-xl bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors flex items-center justify-center"
                                 >
-                                    <PlusCircle size={15} />
-                                    {profile?.host_mode_active ? "Post a Room" : "Become a Host"}
+                                    <Bell size={20} strokeWidth={2} />
+                                    {totalBadge > 0 && (
+                                        <span className="absolute top-2 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                                    )}
                                 </button>
 
                                 {/* My Account dropdown */}
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setAccountOpen((v) => !v)}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${anyAccountActive || accountOpen
-                                            ? "border-primary/30 bg-primary/5 text-primary"
-                                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                                            }`}
+                                        className="flex items-center gap-1.5 ml-1"
                                     >
-                                        {/* Avatar initial */}
-                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${anyAccountActive || accountOpen ? "bg-primary text-white" : "bg-primary/15 text-primary"
-                                            }`}>
-                                            {user?.email?.[0]?.toUpperCase() ?? "U"}
+                                        <div className="w-10 h-10 rounded-full border border-transparent hover:border-gray-200 transition-colors overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+                                            {profile?.avatar_url ? (
+                                                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-sm font-bold text-primary">
+                                                    {user?.email?.[0]?.toUpperCase() ?? "U"}
+                                                </span>
+                                            )}
                                         </div>
-                                        <span className="text-sm font-medium">My Account</span>
-
-                                        {/* Badge on button if there are unread items */}
-                                        {totalBadge > 0 && (
-                                            <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                                                {totalBadge > 9 ? "9+" : totalBadge}
-                                            </span>
-                                        )}
-
                                         <ChevronDown
-                                            size={14}
-                                            className={`text-gray-400 transition-transform ${accountOpen ? "rotate-180" : ""}`}
+                                            size={16}
+                                            strokeWidth={3}
+                                            className={`text-gray-900 transition-transform ${accountOpen ? "rotate-180" : ""}`}
                                         />
                                     </button>
 
