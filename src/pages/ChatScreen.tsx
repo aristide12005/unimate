@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { X, Image as ImageIcon, Camera, Send, Phone, Video, MoreVertical, Check, CheckCheck, Paperclip, Loader2 } from "lucide-react";
+import { X, Image as ImageIcon, Camera, Send, Phone, Video, MoreVertical, Check, CheckCheck, Paperclip, Loader2, Plus, Home, ShieldAlert } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import JSConfetti from 'js-confetti';
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Trash2, Edit2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import ReportUserDialog from "@/components/ReportUserDialog";
 
 const ChatScreen = () => {
@@ -33,6 +37,12 @@ const ChatScreen = () => {
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isBlockAlertOpen, setIsBlockAlertOpen] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
+
+    // Rich Message Modals
+    const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
+    const [newConditionText, setNewConditionText] = useState("");
+    const [isListingModalOpen, setIsListingModalOpen] = useState(false);
+    const [myListings, setMyListings] = useState<any[]>([]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -115,7 +125,10 @@ const ChatScreen = () => {
                     attachmentUrl: m.attachment_url,
                     attachmentType: m.attachment_type,
                     isEdited: m.is_edited,
-                    isDeleted: m.is_deleted
+                    isDeleted: m.is_deleted,
+                    messageType: m.message_type || 'text',
+                    payload: m.payload,
+                    status: m.status
                 }));
                 setMessages(loadedMessages);
 
@@ -156,7 +169,10 @@ const ChatScreen = () => {
                             attachmentUrl: payload.new.attachment_url,
                             attachmentType: payload.new.attachment_type,
                             isEdited: payload.new.is_edited,
-                            isDeleted: payload.new.is_deleted
+                            isDeleted: payload.new.is_deleted,
+                            messageType: payload.new.message_type || 'text',
+                            payload: payload.new.payload,
+                            status: payload.new.status
                         };
                         setMessages(prev => {
                             // Dedup logic just in case
@@ -174,7 +190,8 @@ const ChatScreen = () => {
                             text: payload.new.content,
                             isRead: payload.new.is_read,
                             isEdited: payload.new.is_edited,
-                            isDeleted: payload.new.is_deleted
+                            isDeleted: payload.new.is_deleted,
+                            status: payload.new.status
                         } : m));
                     }
                 }
@@ -396,6 +413,108 @@ const ChatScreen = () => {
         }
     };
 
+    const handleSendCondition = async () => {
+        if (!newConditionText.trim() || !senderProfile || !receiver?.id) return;
+
+        const optimisticMessage = {
+            id: Date.now(),
+            text: "",
+            senderId: senderProfile.id,
+            receiverId: receiver.id,
+            createdAt: new Date().toISOString(),
+            isRead: false,
+            messageType: 'condition_proposal',
+            payload: { text: newConditionText },
+            status: 'pending'
+        };
+
+        setMessages(prev => [...prev, optimisticMessage]);
+        setIsConditionModalOpen(false);
+        setNewConditionText("");
+
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: senderProfile.id,
+                receiver_id: receiver.id,
+                content: "",
+                is_read: false,
+                message_type: 'condition_proposal',
+                payload: { text: newConditionText },
+                status: 'pending'
+            });
+
+        if (error) {
+            toast.error("Failed to propose condition.");
+            setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+        }
+    };
+
+    const handleShareListing = async (listing: any) => {
+        if (!senderProfile || !receiver?.id) return;
+
+        const optimisticMessage = {
+            id: Date.now(),
+            text: "",
+            senderId: senderProfile.id,
+            receiverId: receiver.id,
+            createdAt: new Date().toISOString(),
+            isRead: false,
+            messageType: 'listing_share',
+            payload: {
+                id: listing.id,
+                title: listing.title,
+                price: listing.price,
+                image: listing.image
+            }
+        };
+
+        setMessages(prev => [...prev, optimisticMessage]);
+        setIsListingModalOpen(false);
+
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                sender_id: senderProfile.id,
+                receiver_id: receiver.id,
+                content: "",
+                is_read: false,
+                message_type: 'listing_share',
+                payload: optimisticMessage.payload
+            });
+
+        if (error) {
+            toast.error("Failed to share listing.");
+            setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+        }
+    };
+
+    // Fetch my listings when opening modal
+    const openListingModal = async () => {
+        if (!senderProfile) return;
+        setIsListingModalOpen(true);
+        const { data, error } = await supabase
+            .from('listings')
+            .select('*')
+            .eq('author_id', senderProfile.id);
+
+        if (data) setMyListings(data);
+    };
+
+    const updateConditionStatus = async (msgId: string | number, newStatus: 'accepted' | 'declined') => {
+        // Optimistic UI
+        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: newStatus } : m));
+
+        const { error } = await supabase
+            .from('messages')
+            .update({ status: newStatus })
+            .eq('id', msgId);
+
+        if (error) {
+            toast.error(`Failed to mark condition as ${newStatus}.`);
+        }
+    };
+
     const handleDeleteMessage = async (msgId: any) => {
         // Optimistic update
         setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isDeleted: true } : m));
@@ -455,6 +574,99 @@ const ChatScreen = () => {
     };
 
     const renderMessageContent = (msg: any) => {
+        const isMe = msg.senderId === currentUser?.id || msg.senderId === 'me' || (senderProfile && msg.senderId === senderProfile.id);
+
+        if (msg.isDeleted) {
+            return (
+                <p className="italic text-sm opacity-70 flex items-center gap-2">
+                    <Trash2 size={12} /> This message was deleted
+                </p>
+            );
+        }
+
+        // Conversational Commerce: Listing Share Bubble
+        if (msg.messageType === 'listing_share' && msg.payload) {
+            return (
+                <div className="w-[260px]">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Home size={16} className={isMe ? "text-orange-100" : "text-gray-400"} />
+                        <p className={`text-xs font-bold uppercase tracking-wide ${isMe ? "text-orange-200" : "text-gray-500"}`}>
+                            Shared Listing
+                        </p>
+                    </div>
+                    <div
+                        onClick={() => navigate(`/listings/${msg.payload.id}`)}
+                        className={`overflow-hidden rounded-xl border cursor-pointer active:scale-95 transition-transform ${isMe ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-100'}`}
+                    >
+                        <div className="h-32 w-full relative">
+                            <img src={msg.payload.image} className="absolute inset-0 w-full h-full object-cover" />
+                        </div>
+                        <div className="p-3">
+                            <h4 className={`font-bold text-sm truncate ${isMe ? 'text-white' : 'text-gray-900'}`}>{msg.payload.title}</h4>
+                            <p className={`font-bold mt-1 ${isMe ? 'text-orange-200' : 'text-primary'}`}>{msg.payload.price}</p>
+                        </div>
+                    </div>
+                    <div className="mt-2 text-center text-xs font-bold hover:underline cursor-pointer">
+                        Tap to view details
+                    </div>
+                </div>
+            );
+        }
+
+        // Conversational Commerce: Condition/Rule Proposal Bubble
+        if (msg.messageType === 'condition_proposal' && msg.payload) {
+            return (
+                <div className="w-[280px]">
+                    <div className="flex items-center gap-2 mb-3">
+                        <ShieldAlert size={16} className={isMe ? "text-orange-100" : "text-gray-400"} />
+                        <p className={`text-xs font-bold uppercase tracking-wide ${isMe ? "text-orange-200" : "text-gray-500"}`}>
+                            Proposed Rule / Vibe
+                        </p>
+                    </div>
+
+                    <p className="text-[15px] font-medium leading-relaxed mb-4">
+                        "{msg.payload.text}"
+                    </p>
+
+                    {/* Action Buttons (Only show to the receiver if pending) */}
+                    {!isMe && msg.status === 'pending' && (
+                        <div className="flex gap-2 mt-4">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); updateConditionStatus(msg.id, 'accepted'); }}
+                                className="flex-1 flex items-center justify-center gap-1.5 bg-green-500/10 hover:bg-green-500 hover:text-white text-green-700 border border-green-500/20 py-2 rounded-xl text-sm font-bold transition-colors"
+                            >
+                                <Check size={16} /> Agree
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); updateConditionStatus(msg.id, 'declined'); }}
+                                className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500 hover:text-white text-red-700 border border-red-500/20 py-2 rounded-xl text-sm font-bold transition-colors"
+                            >
+                                <X size={16} /> Decline
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Status Indicators */}
+                    <div className="mt-3">
+                        {msg.status === 'pending' && isMe && (
+                            <div className="text-white/70 text-xs font-bold rounded-lg inline-flex items-center gap-1.5 bg-black/10 px-3 py-1.5">
+                                <Loader2 size={12} className="animate-spin" /> Waiting for response...
+                            </div>
+                        )}
+                        {msg.status === 'accepted' && (
+                            <div className={`text-xs font-bold py-1.5 px-3 rounded-lg inline-flex items-center gap-1 ${isMe ? 'bg-white/20 text-white' : 'bg-green-50 text-green-700'}`}>
+                                <CheckCheck size={14} /> Agreed
+                            </div>
+                        )}
+                        {msg.status === 'declined' && (
+                            <div className={`text-xs font-bold py-1.5 px-3 rounded-lg inline-flex items-center gap-1 ${isMe ? 'bg-black/20 text-white' : 'bg-red-50 text-red-700'}`}>
+                                <X size={14} /> Declined
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
         if (msg.isDeleted) {
             return (
                 <p className="italic text-sm opacity-70 flex items-center gap-2">
@@ -717,17 +929,37 @@ const ChatScreen = () => {
                 />
 
                 <div className="flex items-center gap-3 max-w-4xl mx-auto">
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
-                        className="relative p-3 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-all duration-200 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        {isUploading ? (
-                            <Loader2 size={22} className="animate-spin text-primary" />
-                        ) : (
-                            <ImageIcon size={22} strokeWidth={2} />
-                        )}
-                    </button>
+                    {/* The + Attachment Menu */}
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button disabled={isBlocked || isUploading} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shrink-0 disabled:opacity-50">
+                                <Plus size={22} className={isUploading ? "animate-spin" : ""} />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-2 rounded-2xl shadow-xl border border-gray-100 mb-2 ml-2" align="start" sideOffset={10}>
+                            <div className="flex flex-col gap-1">
+                                <button onClick={() => { document.body.click(); openListingModal(); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-sm font-bold text-gray-700 transition-colors text-left w-full group">
+                                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                        <Home size={18} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span>Share My Listing</span>
+                                        <span className="text-[10px] text-gray-400 font-medium tracking-wide">Send a room preview</span>
+                                    </div>
+                                </button>
+                                <button onClick={() => { document.body.click(); setIsConditionModalOpen(true); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 text-sm font-bold text-gray-700 transition-colors text-left w-full group mt-1">
+                                    <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
+                                        <ShieldAlert size={18} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span>Propose a Rule / Vibe</span>
+                                        <span className="text-[10px] text-gray-400 font-medium tracking-wide">Send a Yes/No agreement</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+
                     <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
