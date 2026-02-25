@@ -1,4 +1,3 @@
-
 export interface HousingRules {
     custom_terms?: string;
     shared_spaces?: string[];

@@ -1,10 +1,10 @@
-
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const SupportPageLayout = ({ title, children }: { title: string, children: React.ReactNode }) => {
+const SupportPageLayout = ({ title, children }: { title: string, children: ReactNode }) => {
     const navigate = useNavigate();
     return (
         <div className="min-h-screen bg-background flex flex-col">
