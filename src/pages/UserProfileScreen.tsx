@@ -184,6 +184,7 @@ const UserProfileScreen = () => {
                     <p className="text-lg font-bold text-gray-900">{author.location}</p>
                 </div>
 
+
                 {/* Bio */}
                 {author.bio && (
                     <div className="mt-4">
@@ -198,13 +199,17 @@ const UserProfileScreen = () => {
                     {author.school_company && (
                         <div className="bg-white p-3 rounded-xl border border-gray-100">
                             <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Occupation</p>
-                            <p className="font-semibold text-gray-800 text-sm line-clamp-2">{author.school_company}</p>
+                            <p className="font-semibold text-gray-800 text-sm line-clamp-2">
+                                {typeof author.school_company === 'string' ? author.school_company : JSON.stringify(author.school_company)}
+                            </p>
                         </div>
                     )}
                     {author.lifestyle && (
                         <div className="bg-white p-3 rounded-xl border border-gray-100">
                             <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Lifestyle</p>
-                            <p className="font-semibold text-gray-800 text-sm">{author.lifestyle}</p>
+                            <p className="font-semibold text-gray-800 text-sm">
+                                {typeof author.lifestyle === 'string' ? author.lifestyle : JSON.stringify(author.lifestyle)}
+                            </p>
                         </div>
                     )}
                 </div>
@@ -216,13 +221,13 @@ const UserProfileScreen = () => {
                             <div>
                                 <p className="text-sm font-bold text-gray-900 mb-2">Interests</p>
                                 <div className="flex flex-wrap gap-2">
-                                    {Array.isArray(author.interests) ? author.interests.map((interest: string, i: number) => (
+                                    {Array.isArray(author.interests) ? author.interests.map((interest: any, i: number) => (
                                         <span key={i} className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600">
-                                            {interest}
+                                            {typeof interest === 'string' ? interest : JSON.stringify(interest)}
                                         </span>
                                     )) : (
                                         <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600">
-                                            {author.interests}
+                                            {typeof author.interests === 'string' ? author.interests : JSON.stringify(author.interests)}
                                         </span>
                                     )}
                                 </div>
@@ -233,13 +238,13 @@ const UserProfileScreen = () => {
                             <div>
                                 <p className="text-sm font-bold text-gray-900 mb-2">Languages</p>
                                 <div className="flex flex-wrap gap-2">
-                                    {Array.isArray(author.languages) ? author.languages.map((lang: string, i: number) => (
+                                    {Array.isArray(author.languages) ? author.languages.map((lang: any, i: number) => (
                                         <span key={i} className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-xs font-medium">
-                                            {lang}
+                                            {typeof lang === 'string' ? lang : JSON.stringify(lang)}
                                         </span>
                                     )) : (
                                         <span className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-full text-xs font-medium">
-                                            {author.languages}
+                                            {typeof author.languages === 'string' ? author.languages : JSON.stringify(author.languages)}
                                         </span>
                                     )}
                                 </div>
