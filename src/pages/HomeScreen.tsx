@@ -10,9 +10,11 @@ import { useListings } from "@/hooks/useListings";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUnread } from "@/contexts/UnreadContext";
 import logo from "@/assets/logo.png";
-import bgVideo from "@/assets/background.webm";
+import bgVideo1 from "@/assets/background.webm";
+import bgVideo2 from "@/assets/background2.webm";
+import bgVideo3 from "@/assets/background3.webm";
 
-const CATEGORIES = ["All", "Single Room", "Shared Room", "Studio", "Apartment", "En-suite"];
+const MEDIA_SLIDES = [bgVideo1, bgVideo2, bgVideo3];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Desktop listing card
@@ -57,8 +59,17 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
   profile: any;
   navigate: (path: string, opts?: any) => void;
 }) => {
+}) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [bgIndex, setBgIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setBgIndex(prev => (prev + 1) % MEDIA_SLIDES.length);
+    }, 8000); // Change slide every 8 seconds
+    return () => clearInterval(timer);
+  }, []);
 
   const filtered = listings.filter((l) => {
     const matchesSearch = !search || l.title?.toLowerCase().includes(search.toLowerCase()) || l.location?.toLowerCase().includes(search.toLowerCase());
@@ -70,16 +81,19 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
     <div className="pt-2 pb-12 w-full">
       {/* ── Hero ── */}
       <div className="relative rounded-3xl overflow-hidden mb-10 px-10 py-12 min-h-[400px] flex flex-col justify-center">
-        {/* Background video */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src={bgVideo} type="video/webm" />
-        </video>
+        {/* Background video slideshow */}
+        {MEDIA_SLIDES.map((src, idx) => (
+          <video
+            key={src}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? "opacity-100" : "opacity-0"}`}
+          >
+            <source src={src} type="video/webm" />
+          </video>
+        ))}
 
         {/* Dark gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
@@ -213,6 +227,14 @@ const HomeScreen = () => {
   const isMobile = useIsMobile();
   const { unreadCount } = useUnread();
   const [profile, setProfile] = useState<any>(null);
+  const [bgIndex, setBgIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setBgIndex(prev => (prev + 1) % MEDIA_SLIDES.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -279,15 +301,18 @@ const HomeScreen = () => {
 
       {/* Global Background Video */}
       <div className="fixed inset-0 z-0 bg-black pointer-events-none">
-        <video
-          src={bgVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          controls={false}
-          className="w-full h-full object-cover opacity-60"
-        />
+        {MEDIA_SLIDES.map((src, idx) => (
+          <video
+            key={src}
+            src={src}
+            autoPlay
+            loop
+            muted
+            playsInline
+            controls={false}
+            className={`absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? "opacity-100" : "opacity-0"}`}
+          />
+        ))}
       </div>
 
       {/* ─── Global Overlays (Floating on top) ─── */}
