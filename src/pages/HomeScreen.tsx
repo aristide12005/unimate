@@ -71,18 +71,32 @@ const DesktopHome = ({ listings, loading, profile, navigate }: {
   return (
     <div className="pt-2 pb-12 w-full">
       {/* ── Hero ── */}
-      <div className="relative rounded-3xl overflow-hidden mb-10 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 px-10 py-12">
+      <div className="relative rounded-3xl overflow-hidden mb-10 px-10 py-12 min-h-[400px] flex flex-col justify-center">
+        {/* Background video */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src={bgVideo} type="video/webm" />
+        </video>
+
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+
         <div className="relative z-10 max-w-xl">
           <div className="flex items-center gap-2 mb-2">
             <img src={logo} alt="uniMate" className="w-7 h-7 rounded-lg object-contain" />
-            <p className="text-primary font-semibold text-sm uppercase tracking-widest">Student Housing</p>
+            <p className="text-white/90 font-semibold text-sm uppercase tracking-widest">Student Housing</p>
           </div>
 
-          <h1 className="text-4xl font-black text-gray-900 leading-tight mb-3">
+          <h1 className="text-4xl font-black text-white leading-tight mb-3">
             Find your perfect<br />
             <span className="text-primary">room today</span>
           </h1>
-          <p className="text-gray-500 text-base mb-8">
+          <p className="text-white/80 text-base mb-8">
             Browse verified listings from trusted hosts in your university area.
           </p>
           {/* Search bar */}
