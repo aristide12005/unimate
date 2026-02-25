@@ -274,12 +274,28 @@ const HomeScreen = () => {
   return (
     <div className="bg-black w-full overflow-hidden h-[100dvh]">
 
+      {/* Global overlay for mobile (top gradient for icons) */}
+      <div className="fixed top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent z-40 pointer-events-none" />
+
+      {/* Global Background Video */}
+      <div className="fixed inset-0 z-0 bg-black pointer-events-none">
+        <video
+          src={bgVideo}
+          autoPlay
+          loop
+          muted
+          playsInline
+          controls={false}
+          className="w-full h-full object-cover opacity-60"
+        />
+      </div>
+
       {/* ─── Global Overlays (Floating on top) ─── */}
       <div className="fixed top-0 left-0 right-0 z-50 px-5 pt-14 pb-2 flex items-center justify-between pointer-events-none">
         {/* Left: Profile Badge */}
         <div
-          className="flex items-center gap-3 cursor-pointer pointer-events-auto bg-black/20 backdrop-blur-md rounded-full pr-4 p-1 border border-white/10"
           onClick={() => handleProtectedAction("/profile")}
+          className="flex items-center gap-2 bg-black/20 backdrop-blur-md pl-1.5 pr-4 py-1.5 rounded-full border border-white/10 shadow-lg pointer-events-auto active:scale-95 transition-transform"
         >
           <div className="w-9 h-9 rounded-full overflow-hidden border border-white/40 shadow-sm shrink-0">
             <img
@@ -317,25 +333,24 @@ const HomeScreen = () => {
         </div>
       </div>
 
-      {/* ─── TikTok-Style Vertical Snap Feed ─── */}
-      <div className="h-[calc(100dvh-60px)] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar bg-black">
+      {/* Snap Container (Scrollable) */}
+      <div
+        className="relative h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory bg-transparent z-10 pb-16"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
         {listings.slice(0, 15).map((listing, index) => (
-          <div key={listing.id} className="h-full w-full snap-start relative bg-gray-900 group">
+          <div key={listing.id} className="h-full w-full snap-start relative bg-transparent group">
 
             {/* Background Media */}
-            <div className="absolute inset-0 w-full h-full">
-              {/* Fallback pattern while loading */}
-              <div className="absolute inset-0 bg-gray-900" />
+            <div className="absolute inset-0 w-full h-full bg-black/40">
               <img
                 src={listing.image}
                 alt={listing.title}
-                className="w-full h-full object-cover"
-                loading={index === 0 ? "eager" : "lazy"}
+                className="w-full h-full object-cover opacity-90 mix-blend-overlay"
               />
+              {/* Bottom gradient overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             </div>
-
-            {/* Dark gradient overlay for text legibility at bottom */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none" />
 
             {/* ─── Bottom Info Overlay ─── */}
             <div className="absolute bottom-4 left-0 right-0 px-5 flex flex-col justify-end text-white safe-bottom pointer-events-auto">
