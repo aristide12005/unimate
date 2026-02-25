@@ -44,6 +44,11 @@ const ChatScreen = () => {
     const [listingModalTitle, setListingModalTitle] = useState("Share a Listing");
     const [myListings, setMyListings] = useState<any[]>([]);
 
+    // Contract Finalization
+    const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+    const [acceptedConditions, setAcceptedConditions] = useState<string[]>([]);
+    const [isDraftingContract, setIsDraftingContract] = useState(false);
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -516,6 +521,86 @@ const ChatScreen = () => {
 
         if (error) {
             toast.error(`Failed to mark condition as ${newStatus}.`);
+        } else if (senderProfile && receiver) {
+            // Push Notification to the original sender of the condition
+            const messageObj = messages.find(m => m.id === msgId);
+            if (messageObj) {
+                const targetUserId = messageObj.senderId;
+                // Only notify if we are not testing with ourselves
+                if (targetUserId !== senderProfile.id) {
+                    await supabase.from('notifications').insert({
+                        user_id: targetUserId,
+                        type: 'message',
+                        title: `Rule ${newStatus === 'accepted' ? 'Accepted ✅' : 'Declined ❌'}`,
+                        message: `${senderProfile.first_name} ${newStatus} your proposed rule: "${messageObj.payload?.text}"`,
+                        action_url: `/chat/${senderProfile.id}`
+                    });
+                }
+            }
+        }
+    };
+
+    const handleDraftContract = () => {
+        // Collect all accepted conditions from the chat history
+        const conditions = messages
+            .filter(m => m.messageType === 'condition_proposal' && m.status === 'accepted')
+            .map(m => m.payload?.text || "")
+            .filter(text => text !== "");
+
+        setAcceptedConditions(conditions);
+        setIsContractModalOpen(true);
+    };
+
+    const handleSendContract = async () => {
+        if (!senderProfile || !receiver) return;
+        setIsDraftingContract(true);
+
+        try {
+            // First find an associated listing ID from the chat history (if any was shared)
+            const sharedListingMsg = messages.find(m => m.messageType === 'listing_share');
+            const listingId = sharedListingMsg ? sharedListingMsg.payload?.id : null;
+
+            // 1. Create the contract
+            const { error: contractError } = await supabase
+                .from('contracts')
+                .insert({
+                    host_id: senderProfile.id,
+                    seeker_id: receiver.id,
+                    status: 'pending',
+                    agreed_rules: acceptedConditions,
+                    listing_id: listingId
+                });
+
+            if (contractError) throw contractError;
+
+            // 2. Lock the listing if one was associated
+            if (listingId) {
+                const { error: listingError } = await supabase
+                    .from('listings')
+                    .update({ availability_status: 'rented' })
+                    .eq('id', listingId);
+
+                if (listingError) throw listingError;
+            }
+
+            // 3. Send a system message to the chat
+            const sysMessage = {
+                sender_id: senderProfile.id,
+                receiver_id: receiver.id,
+                content: "📋 A contract has been generated based on our agreed rules.",
+                message_type: 'text',
+                is_read: false
+            };
+
+            await supabase.from('messages').insert(sysMessage);
+
+            toast.success("Contract generated and listing locked!");
+            setIsContractModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to generate contract.");
+        } finally {
+            setIsDraftingContract(false);
         }
     };
 
@@ -1034,6 +1119,46 @@ const ChatScreen = () => {
                                 </div>
                             ))
                         )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Contract Draft Modal */}
+            <Dialog open={isContractModalOpen} onOpenChange={setIsContractModalOpen}>
+                <DialogContent className="sm:max-w-md rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl font-black">
+                            <CheckCheck className="text-primary" /> Draft Contract
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 flex flex-col gap-4">
+                        <p className="text-sm text-gray-500">
+                            The following rules have been explicitly accepted by both parties in this chat. Generating a contract will formalize this agreement and lock any associated listings.
+                        </p>
+
+                        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                            <h4 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wider">Agreed Rules</h4>
+                            {acceptedConditions.length === 0 ? (
+                                <p className="text-gray-400 italic text-sm">No rules agreed upon yet.</p>
+                            ) : (
+                                <ul className="space-y-2">
+                                    {acceptedConditions.map((condition, idx) => (
+                                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                                            <Check size={16} className="text-green-500 mt-0.5 shrink-0" />
+                                            <span>{condition}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        <Button
+                            onClick={handleSendContract}
+                            disabled={isDraftingContract || acceptedConditions.length === 0}
+                            className="w-full h-12 rounded-xl text-base font-bold shadow-lg mt-2"
+                        >
+                            {isDraftingContract ? <Loader2 className="animate-spin" /> : "Formalize & Lock Listing"}
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
