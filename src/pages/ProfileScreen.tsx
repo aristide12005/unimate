@@ -2,7 +2,7 @@ import { Settings, Edit3, LogOut, Camera, Star, Users, BookOpen, MapPin, Briefca
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
